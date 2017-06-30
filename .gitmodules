@@ -1,0 +1,3 @@
+[submodule "libprotobuf"]
+	path = libprotobuf
+	url = https://github.com/Artenuvielle/libprotobuf.git

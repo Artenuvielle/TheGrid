@@ -3,6 +3,11 @@ DerivedDataCache
 Intermediate
 Saved
 Build
+Source/ThirdParty/libprotobuf/
+.vs
+proto/out/
+*.pb.h
+*.pb.cc
 *.VC.db
 *.opensdf
 *.opendb

@@ -1,0 +1,61 @@
+syntax = "proto2";
+
+message PositionPacketType {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+}
+
+message OrientationPacketType {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+	required float w = 4;
+}
+
+
+message PlayerInformation {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+};
+
+message GameInformation {
+	required bool is_running = 1;
+	optional int32 winning_player_id = 2;
+};
+
+message PlayerCounterInformation {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required int32 counter = 3;
+};
+
+message PlayerPosition {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required PositionPacketType head_pos = 3;
+	required OrientationPacketType head_rot = 4;
+	required PositionPacketType main_hand_pos = 5;
+	required OrientationPacketType main_hand_rot = 6;
+	required PositionPacketType off_hand_pos = 7;
+	required OrientationPacketType off_hand_rot = 8;
+};
+
+message DiskStatusInformation {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required int32 disk_status_id = 3;
+};
+
+message DiskThrowInformation {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required PositionPacketType disk_pos = 3;
+	required PositionPacketType disk_momentum = 4;
+};
+
+message DiskPosition {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required PositionPacketType disk_pos = 3;
+}
