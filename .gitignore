@@ -3,7 +3,8 @@ DerivedDataCache
 Intermediate
 Saved
 Build
-Source/ThirdParty/libprotobuf/
+Source/ThirdParty/libprotobuf
+Source/ThirdParty/enet
 .vs
 proto/out/
 *.pb.h
