@@ -13,7 +13,7 @@ for %%f in (.\*.proto) do (
 	..\Source\ThirdParty\libprotobuf\bin\protoc.exe --cpp_out=./out %%f
 	..\Source\ThirdParty\libprotobuf\bin\regenerateforue4.py .\out\%%~nf.pb.h
 	..\Source\ThirdParty\libprotobuf\bin\regenerateforue4.py .\out\%%~nf.pb.cc
-	move .\out\%%~nf.pb.h ..\Source\ThirdParty\libprotobuf\include\
-	move .\out\%%~nf.pb.cc ..\Source\ThirdParty\libprotobuf\include\
+	move .\out\%%~nf.pb.h ..\Source\TheGrid\
+	move .\out\%%~nf.pb.cc ..\Source\TheGrid\
 	)
 cd ..
