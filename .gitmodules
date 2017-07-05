@@ -1,3 +1,6 @@
 [submodule "enet4ue"]
 	path = enet4ue
 	url = https://github.com/Artenuvielle/enet4ue
+[submodule "libprotobuf"]
+	path = libprotobuf
+	url = https://github.com/Artenuvielle/libprotobuf
