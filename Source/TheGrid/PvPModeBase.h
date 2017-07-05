@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Network.h"
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "PvPModeBase.generated.h"
@@ -15,6 +16,8 @@ class THEGRID_API APvPModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	void InitGame();
+	void InitGame(const FString &, const FString &, FString &);
 	
+private:
+	Client* _client;
 };

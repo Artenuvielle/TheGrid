@@ -2,21 +2,14 @@
 
 #include "PvPModeBase.h"
 
-#include "NetworkPackets.pb.h"
-#include "enet/enet.h"
-
-void APvPModeBase::InitGame()
+void APvPModeBase::InitGame(const FString & in1, const FString & in2, FString & in3)
 {
-	DiskPosition dpos;
-	PositionPacketType pos;
-	dpos.set_allocated_disk_pos(&pos);
-	dpos.set_faction_id(0);
-	dpos.set_player_id(0);
-
-	if (enet_initialize() != 0)
-	{
-		fprintf(stderr, "An error occurred while initializing ENet.\n");
-		return;
+	UE_LOG(LogTemp, Warning, TEXT("PvP Game initiating..."));
+	_client = new Client();
+	if (_client->connect("127.0.0.1", 13244)) {
+		UE_LOG(LogTemp, Warning, TEXT("connection established"));
+	} else {
+		UE_LOG(LogTemp, Warning, TEXT("could not connect"));
 	}
-	atexit(enet_deinitialize);
+	Super::InitGame(in1, in2, in3);
 }
