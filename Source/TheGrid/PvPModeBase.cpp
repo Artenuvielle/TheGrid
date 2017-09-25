@@ -3,14 +3,29 @@
 #include "PvPModeBase.h"
 #include <stdlib.h>
 #include "LogStream.h"
+#include "Runtime/Engine/Public/DrawDebugHelpers.h"
 
 LogStream logStream;
+
+void drawGizmo(UWorld* world, FVector position, FQuat rotation, int length = 15, int width = 2) {
+	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::UpVector), FColor(0, 0, 255), false, 0.1, 0, width);
+	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::RightVector), FColor(0, 255, 0), false, 0.1, 0, width);
+	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::ForwardVector), FColor(255, 0, 0), false, 0.1, 0, width);
+}
 
 template<typename S> inline
 S* deserialize(std::string serializedData) {
 	S* ret = new S();
 	ret->ParseFromString(serializedData);
 	return ret;
+}
+
+FVector createVector(PositionPacketType position) {
+	return FVector(-position.z(), position.x(), position.y());
+}
+
+FQuat createQuat(OrientationPacketType orientation) {
+	return FQuat(-orientation.z(), orientation.x(), orientation.y(), orientation.w());
 }
 
 APvPModeBase::APvPModeBase() : Super() {
@@ -21,11 +36,14 @@ APvPModeBase::APvPModeBase() : Super() {
 
 void APvPModeBase::InitGame(const FString & in1, const FString & in2, FString & in3)
 {
+	Super::InitGame(in1, in2, in3);
 	UE_LOG(LogTemp, Warning, TEXT("PvP Game initiating..."));
 
 	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
-
-	Super::InitGame(in1, in2, in3);
+	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
+	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
+	_userActor->Init(userFaction, false);
+	_enemyActor->Init(enemyFaction, true);
 }
 
 void APvPModeBase::Tick(float deltaSeconds)
@@ -75,15 +93,34 @@ void APvPModeBase::handleGameStateBroadcast(GameInformation* information)
 
 void APvPModeBase::handlePlayerIdentification(PlayerInformation* information)
 {
+	setFaction = information->faction_id() == 0 ? userFaction : enemyFaction;
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerIdentification"));
 }
 
 void APvPModeBase::handlePlayerPositionBroadcast(PlayerPosition* information)
 {
-	std::cout << "player " << information->player_id() << " position: Vec3f("
-		<< information->head_pos().x() << ", "
-		<< information->head_pos().y() << ", "
-		<< information->head_pos().z() << ")" << std::endl;
+	APlayerActor* actor = _userActor;
+	if (information->faction_id() != setFaction)
+	{
+		actor = _enemyActor;
+	}
+
+	FQuat mainHand = createQuat(information->main_hand_rot());
+	std::cout << "x: " << mainHand.X << " y: " << mainHand.X << " z: " << mainHand.X << " w: " << mainHand.X << std::endl;
+
+	actor->setHeadPosition(createVector(information->head_pos()));
+	actor->setHeadRotation(createQuat(information->head_rot()));
+	actor->setDiskArmPosition(createVector(information->main_hand_pos()));
+	actor->setDiskArmRotation(createQuat(information->main_hand_rot()));
+	actor->setShieldArmPosition(createVector(information->off_hand_pos()));
+	actor->setShieldArmRotation(createQuat(information->off_hand_rot()));
+
+	if (UWorld* g = GetWorld())
+	{
+		drawGizmo(GetWorld(), createVector(information->head_pos()), createQuat(information->head_rot()));
+		drawGizmo(GetWorld(), createVector(information->main_hand_pos()), createQuat(information->main_hand_rot()));
+		drawGizmo(GetWorld(), createVector(information->off_hand_pos()), createQuat(information->off_hand_rot()));
+	}
 }
 
 void APvPModeBase::handlePlayerChangeLifeBroadcast(PlayerCounterInformation* information)

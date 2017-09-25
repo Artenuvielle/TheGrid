@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "HAL/Runnable.h"
 #include "GameFramework/GameModeBase.h"
+#include "PlayerActor.h"
 #include "PvPModeBase.generated.h"
 
 class NetworkWorker;
@@ -26,6 +27,9 @@ public:
 
 private:
 	NetworkWorker* _networkWorker;
+	APlayerActor* _userActor;
+	APlayerActor* _enemyActor;
+	PlayerFaction setFaction;
 
 	void handleGameStateBroadcast(GameInformation* information);
 	void handlePlayerIdentification(PlayerInformation* information);
