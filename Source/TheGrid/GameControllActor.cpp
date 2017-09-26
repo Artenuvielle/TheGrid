@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include "LogStream.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/Character.h"
+#include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 
 LogStream logStream;
 
@@ -38,13 +42,27 @@ AGameControllActor::AGameControllActor() : Super() {
 void AGameControllActor::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("PvP Game initiating..."));
 
 	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
 	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_userActor->Init(userFaction, false);
 	_enemyActor->Init(enemyFaction, true);
+
+	APawn* userPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	TArray<UCameraComponent*> cameras;
+	userPawn->GetComponents<UCameraComponent>(cameras, true);
+	_headComponent = (USceneComponent*)cameras[0];
+	TArray<UMotionControllerComponent*> motionControllers;
+	userPawn->GetComponents<UMotionControllerComponent>(motionControllers, true);
+	for (int i = 0; i < motionControllers.Num(); i++) {
+		if (motionControllers[i]->Hand == EControllerHand::Left) {
+			_shieldArmComponent = (USceneComponent*)motionControllers[i];
+		}
+		else if (motionControllers[i]->Hand == EControllerHand::Right) {
+			_diskArmComponent = (USceneComponent*)motionControllers[i];
+		}
+	}
 }
 
 void AGameControllActor::Tick(float deltaSeconds)
@@ -54,6 +72,10 @@ void AGameControllActor::Tick(float deltaSeconds)
 	int lastIndex = packets.Num() - 1;
 	for (int i = 0; i <= lastIndex; i++) {
 		handleSToCPacket(packets[i].peerId, packets[i].header, packets[i].serializedData);
+	}
+
+	if (_headComponent) {
+		std::cout << " x: " << _headComponent->GetComponentLocation().X << " y: " << _headComponent->GetComponentLocation().Y << " z: " << _headComponent->GetComponentLocation().Z << std::endl;
 	}
 }
 
@@ -179,6 +201,11 @@ TArray<PacketInformation> NetworkWorker::getPacketInformation()
 	}
 	_mutex.Unlock();
 	return arrayToReturn;
+}
+
+Client * NetworkWorker::getClient()
+{
+	return _client;
 }
 
 void NetworkWorker::handleConnect() {}

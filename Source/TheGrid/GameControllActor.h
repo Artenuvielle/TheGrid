@@ -25,6 +25,7 @@ public:
 
 private:
 	NetworkWorker* _networkWorker;
+	USceneComponent* _headComponent, *_diskArmComponent, *_shieldArmComponent;
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
 	PlayerFaction setFaction;
@@ -55,6 +56,7 @@ public:
 	virtual ~NetworkWorker();
 
 	TArray<PacketInformation> getPacketInformation();
+	Client* getClient();
 
 	virtual void handleConnect();
 	virtual void handleDisconnect();
