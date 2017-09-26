@@ -33,6 +33,23 @@ FQuat createQuat(OrientationPacketType orientation) {
 	return FQuat(-orientation.z(), orientation.x(), orientation.y(), orientation.w());
 }
 
+PositionPacketType createPosition(FVector pos) {
+	PositionPacketType ret;
+	ret.set_x(pos.Y);
+	ret.set_y(pos.Z);
+	ret.set_z(-pos.X);
+	return ret;
+}
+
+OrientationPacketType createOrientation(FQuat rot) {
+	OrientationPacketType ret;
+	ret.set_x(rot.Y);
+	ret.set_y(rot.Z);
+	ret.set_z(-rot.X);
+	ret.set_w(rot.W);
+	return ret;
+}
+
 AGameControllActor::AGameControllActor() : Super() {
 	std::cout.rdbuf(&logStream);
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -74,9 +91,51 @@ void AGameControllActor::Tick(float deltaSeconds)
 		handleSToCPacket(packets[i].peerId, packets[i].header, packets[i].serializedData);
 	}
 
-	if (_headComponent) {
-		std::cout << " x: " << _headComponent->GetComponentLocation().X << " y: " << _headComponent->GetComponentLocation().Y << " z: " << _headComponent->GetComponentLocation().Z << std::endl;
+	if (_userId >= 0) {
+		sendPositionInformation();
 	}
+}
+
+void AGameControllActor::sendPositionInformation()
+{
+	PlayerPosition* pp = new PlayerPosition();
+	pp->set_player_id(_userId);
+	pp->set_faction_id(userFaction);
+	PositionPacketType head_pos = createPosition(_userActor->getHeadPosition());
+	PositionPacketType main_hand_pos = createPosition(_userActor->getDiskArmPosition());
+	PositionPacketType off_hand_pos = createPosition(_userActor->getShieldArmPosition());
+	OrientationPacketType head_rot = createOrientation(_userActor->getHeadRotation());
+	OrientationPacketType main_hand_rot = createOrientation(_userActor->getDiskArmRotation());
+	OrientationPacketType off_hand_rot = createOrientation(_userActor->getShieldArmRotation());
+	pp->set_allocated_head_pos(&head_pos);
+	pp->set_allocated_head_rot(&head_rot);
+	pp->set_allocated_main_hand_pos(&main_hand_pos);
+	pp->set_allocated_main_hand_rot(&main_hand_rot);
+	pp->set_allocated_off_hand_pos(&off_hand_pos);
+	pp->set_allocated_off_hand_rot(&off_hand_rot);
+	_networkWorker->getClient()->sendPacket<PlayerPosition>(CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION, pp);
+}
+
+void AGameControllActor::requestGameStart()
+{
+	if (_userId >= 0) {
+		UE_LOG(LogTemp, Display, TEXT("requesting game start"));
+		GameInformation* gi = new GameInformation();
+		gi->set_is_running(true);
+		_networkWorker->getClient()->sendPacket(CTOS_PACKET_TYPE_START_GAME_REQUEST, gi, true);
+	}
+}
+
+void AGameControllActor::updateTrigger(float value)
+{
+}
+
+void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputComponent)
+{
+	Super::SetupPlayerInputComponent(InputComponent);
+	InputComponent->BindAction("MenuButtonLeft", EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
+	InputComponent->BindKey(EKeys::G, EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
+	InputComponent->BindAxis("RightTriggerAnalog", this, &AGameControllActor::updateTrigger);
 }
 
 void AGameControllActor::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData)
@@ -111,19 +170,24 @@ void AGameControllActor::handleSToCPacket(unsigned short peerId, SToCPacketType*
 
 void AGameControllActor::handleGameStateBroadcast(GameInformation* information)
 {
+	if (information->is_running() && !_gameRunning) {
+		UE_LOG(LogTemp, Display, TEXT("game starting"));
+		_gameRunning = true;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("handleGameStateBroadcast"));
 }
 
 void AGameControllActor::handlePlayerIdentification(PlayerInformation* information)
 {
-	setFaction = information->faction_id() == 0 ? userFaction : enemyFaction;
+	_userId = information->player_id();
+	_setFaction = information->faction_id() == 0 ? userFaction : enemyFaction;
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerIdentification"));
 }
 
 void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition* information)
 {
 	APlayerActor* actor = _userActor;
-	if (information->faction_id() != setFaction)
+	if (information->faction_id() != _setFaction)
 	{
 		actor = _enemyActor;
 	}

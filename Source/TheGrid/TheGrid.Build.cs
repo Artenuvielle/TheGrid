@@ -10,7 +10,7 @@ public class TheGrid : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "libprotobuf", "enet", "HeadMountedDisplay", "SteamVR" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "libprotobuf", "enet", "HeadMountedDisplay", "SteamVR", "SteamVRController", "Slate" });
 
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

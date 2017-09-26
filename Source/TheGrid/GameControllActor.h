@@ -5,31 +5,37 @@
 #include "Network.h"
 #include "CoreMinimal.h"
 #include "HAL/Runnable.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "PlayerActor.h"
 #include "GameControllActor.generated.h"
 
 class NetworkWorker;
 
 UCLASS()
-class THEGRID_API AGameControllActor : public AActor
+class THEGRID_API AGameControllActor : public APawn
 {
 	GENERATED_BODY()
-	
+
 public:	
 	// Sets default values for this actor's properties
 	AGameControllActor();
 	void BeginPlay();
 	void Tick(float);
 	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData);
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent);
+	void requestGameStart();
+	void updateTrigger(float value);
 
 private:
 	NetworkWorker* _networkWorker;
 	USceneComponent* _headComponent, *_diskArmComponent, *_shieldArmComponent;
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
-	PlayerFaction setFaction;
+	PlayerFaction _setFaction;
+	bool _gameRunning = false;
+	int _userId = -1;
 
+	void sendPositionInformation();
 	void handleGameStateBroadcast(GameInformation* information);
 	void handlePlayerIdentification(PlayerInformation* information);
 	void handlePlayerPositionBroadcast(PlayerPosition* information);
@@ -66,10 +72,12 @@ public:
 	virtual uint32 Run();
 	virtual void Stop();
 private:
+
 	TArray<PacketInformation> _packets;
 	FCriticalSection _mutex;
 	Client* _client;
 	FRunnableThread* _thread;
 	const char* _host;
 	short _port;
+	bool gameRunnning;
 };
