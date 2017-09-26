@@ -5,23 +5,21 @@
 #include "Network.h"
 #include "CoreMinimal.h"
 #include "HAL/Runnable.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameFramework/Actor.h"
 #include "PlayerActor.h"
-#include "PvPModeBase.generated.h"
+#include "GameControllActor.generated.h"
 
 class NetworkWorker;
 
-/**
- * 
- */
 UCLASS()
-class THEGRID_API APvPModeBase : public AGameModeBase
+class THEGRID_API AGameControllActor : public AActor
 {
 	GENERATED_BODY()
-
-public:
-	APvPModeBase();
-	void InitGame(const FString &, const FString &, FString &);
+	
+public:	
+	// Sets default values for this actor's properties
+	AGameControllActor();
+	void BeginPlay();
 	void Tick(float);
 	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData);
 
@@ -40,6 +38,7 @@ private:
 	void handleDiskThrowBroadcast(DiskThrowInformation* information);
 	void handleDiskPositionBroadcast(DiskPosition* information);
 };
+
 
 #define MAX_PACKETS_PER_TICK 20
 

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PvPModeBase.h"
+#include "GameControllActor.h"
+
 #include <stdlib.h>
 #include "LogStream.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
@@ -28,15 +29,15 @@ FQuat createQuat(OrientationPacketType orientation) {
 	return FQuat(-orientation.z(), orientation.x(), orientation.y(), orientation.w());
 }
 
-APvPModeBase::APvPModeBase() : Super() {
+AGameControllActor::AGameControllActor() : Super() {
 	std::cout.rdbuf(&logStream);
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void APvPModeBase::InitGame(const FString & in1, const FString & in2, FString & in3)
+void AGameControllActor::BeginPlay()
 {
-	Super::InitGame(in1, in2, in3);
+	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT("PvP Game initiating..."));
 
 	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
@@ -46,7 +47,7 @@ void APvPModeBase::InitGame(const FString & in1, const FString & in2, FString & 
 	_enemyActor->Init(enemyFaction, true);
 }
 
-void APvPModeBase::Tick(float deltaSeconds)
+void AGameControllActor::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 	TArray<PacketInformation> packets = _networkWorker->getPacketInformation();
@@ -56,7 +57,7 @@ void APvPModeBase::Tick(float deltaSeconds)
 	}
 }
 
-void APvPModeBase::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData)
+void AGameControllActor::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData)
 {
 	switch (*header) {
 	case STOC_PACKET_TYPE_GAME_STATE_BROADCAST:
@@ -86,27 +87,24 @@ void APvPModeBase::handleSToCPacket(unsigned short peerId, SToCPacketType* heade
 	}
 }
 
-void APvPModeBase::handleGameStateBroadcast(GameInformation* information)
+void AGameControllActor::handleGameStateBroadcast(GameInformation* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleGameStateBroadcast"));
 }
 
-void APvPModeBase::handlePlayerIdentification(PlayerInformation* information)
+void AGameControllActor::handlePlayerIdentification(PlayerInformation* information)
 {
 	setFaction = information->faction_id() == 0 ? userFaction : enemyFaction;
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerIdentification"));
 }
 
-void APvPModeBase::handlePlayerPositionBroadcast(PlayerPosition* information)
+void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition* information)
 {
 	APlayerActor* actor = _userActor;
 	if (information->faction_id() != setFaction)
 	{
 		actor = _enemyActor;
 	}
-
-	FQuat mainHand = createQuat(information->main_hand_rot());
-	std::cout << "x: " << mainHand.X << " y: " << mainHand.X << " z: " << mainHand.X << " w: " << mainHand.X << std::endl;
 
 	actor->setHeadPosition(createVector(information->head_pos()));
 	actor->setHeadRotation(createQuat(information->head_rot()));
@@ -123,27 +121,27 @@ void APvPModeBase::handlePlayerPositionBroadcast(PlayerPosition* information)
 	}
 }
 
-void APvPModeBase::handlePlayerChangeLifeBroadcast(PlayerCounterInformation* information)
+void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeLifeBroadcast"));
 }
 
-void APvPModeBase::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation* information)
+void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeShieldChargeBroadcast"));
 }
 
-void APvPModeBase::handleDiskStatusBroadcast(DiskStatusInformation* information)
+void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskStatusBroadcast"));
 }
 
-void APvPModeBase::handleDiskThrowBroadcast(DiskThrowInformation* information)
+void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskThrowBroadcast"));
 }
 
-void APvPModeBase::handleDiskPositionBroadcast(DiskPosition* information)
+void AGameControllActor::handleDiskPositionBroadcast(DiskPosition* information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskPositionBroadcast"));
 }
@@ -173,12 +171,12 @@ TArray<PacketInformation> NetworkWorker::getPacketInformation()
 {
 	TArray<PacketInformation> arrayToReturn;
 	_mutex.Lock();
-		int lastIndex = _packets.Num() - 1;
-		arrayToReturn.Reserve(lastIndex);
-		for (int i = 0; i <= lastIndex; i++) {
-			arrayToReturn.Add(_packets[0]);
-			_packets.RemoveAt(0);
-		}
+	int lastIndex = _packets.Num() - 1;
+	arrayToReturn.Reserve(lastIndex);
+	for (int i = 0; i <= lastIndex; i++) {
+		arrayToReturn.Add(_packets[0]);
+		_packets.RemoveAt(0);
+	}
 	_mutex.Unlock();
 	return arrayToReturn;
 }
@@ -189,12 +187,12 @@ void NetworkWorker::handleDisconnect() {}
 
 void NetworkWorker::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData) {
 	_mutex.Lock();
-		while (_packets.Num() >= MAX_PACKETS_PER_TICK) {
-			_mutex.Unlock();
-			FPlatformProcess::Sleep(0.1);
-			_mutex.Lock();
-		}
-		_packets.Add({ peerId, header, serializedData });
+	while (_packets.Num() >= MAX_PACKETS_PER_TICK) {
+		_mutex.Unlock();
+		FPlatformProcess::Sleep(0.1);
+		_mutex.Lock();
+	}
+	_packets.Add({ peerId, header, serializedData });
 	_mutex.Unlock();
 }
 
