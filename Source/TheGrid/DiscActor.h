@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MovementPredictingMeshActor.h"
 #include "common.h"
+#include "Observer.h"
 #include "DiscActor.generated.h"
 
 enum DiskState {
@@ -16,7 +17,7 @@ enum DiskState {
 };
 
 UCLASS()
-class THEGRID_API ADiscActor : public AActor
+class THEGRID_API ADiscActor : public AActor, public Observable<GameNotifications>
 {
 	GENERATED_BODY()
 	
@@ -32,10 +33,16 @@ public:
 	FQuat getDiscRotation();
 	DiskState getState();
 
+	bool startDraw(FVector pos);
+	bool endDraw(FVector pos);
+	bool forceReturn();
+	bool forceThrow(FVector pos, FVector momentum);
 private:
 	FVector _discPosition;
 	FQuat _discRotation;
 	DiskState _state;
+	FVector _momentum;
+	FVector _lastPositionWhileDrawn;
 
 	AStaticMeshActor* _discInnerActor;
 	AStaticMeshActor* _discOuterActor;

@@ -41,7 +41,7 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 	ownFaction = faction;
 
 	_discActor = GetWorld()->SpawnActor<ADiscActor>(ADiscActor::StaticClass());
-	_discActor->Init(enemyFaction);
+	_discActor->Init(faction);
 
 	if (drawModel)
 	{

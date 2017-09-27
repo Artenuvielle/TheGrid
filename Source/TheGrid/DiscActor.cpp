@@ -34,8 +34,8 @@ void ADiscActor::Tick(float DeltaTime)
 
 	_discInnerActor->SetActorLocation(_discPosition);
 	_discOuterActor->SetActorLocation(_discPosition);
-	_discInnerActor->SetActorRotation(_discRotation);
-	_discOuterActor->SetActorRotation(_discRotation);
+	_discInnerActor->SetActorRotation(_discRotation * FQuat(FVector::ForwardVector, PI / 2));
+	_discOuterActor->SetActorRotation(_discRotation * FQuat(FVector::ForwardVector, PI / 2));
 }
 
 void ADiscActor::Init(PlayerFaction faction)
@@ -71,4 +71,44 @@ FQuat ADiscActor::getDiscRotation()
 DiskState ADiscActor::getState()
 {
 	return _state;
+}
+
+bool ADiscActor::startDraw(FVector position) {
+	if (_state == DISK_STATE_READY) {
+		_lastPositionWhileDrawn = position;
+		_momentum = FVector::ZeroVector;
+		_state = DISK_STATE_DRAWN;
+		UE_LOG(LogTemp, Display, TEXT("started drawing a disk"));
+		return true;
+	}
+	return false;
+}
+
+bool ADiscActor::endDraw(FVector position) {
+	if (_state == DISK_STATE_DRAWN) {
+		_state = DISK_STATE_FREE_FLY;
+		_momentum.Normalize();
+		UE_LOG(LogTemp, Display, TEXT("finished drawing a disk... LET IF FLYYYYYY"));
+		notify(GAME_NOTIFICATION_DISK_THROWN);
+		return true;
+	}
+	return false;
+}
+
+bool ADiscActor::forceReturn() {
+	if (_state == DISK_STATE_FREE_FLY) {
+		_state = DISK_STATE_RETURNING;
+		return true;
+	}
+	return false;
+}
+
+bool ADiscActor::forceThrow(FVector position, FVector mom) {
+	if (startDraw(position)) {
+		_momentum = mom;
+		if (endDraw(position)) {
+			return true;
+		}
+	}
+	return false;
 }

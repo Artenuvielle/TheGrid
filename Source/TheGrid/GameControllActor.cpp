@@ -47,6 +47,9 @@ AGameControllActor::AGameControllActor() : Super() {
 	std::cout.rdbuf(&logStream);
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	PrimaryActorTick.bCanEverTick = true;
+
+	_gameRunning = false;
+	_userId = -1;
 }
 
 AGameControllActor::~AGameControllActor()
@@ -140,6 +143,25 @@ void AGameControllActor::requestGameStart()
 
 void AGameControllActor::updateTrigger(float value)
 {
+	if (value > 0.5) {
+		if (_userActor->getDiscActor()->getState() == DISK_STATE_READY) {
+			_userActor->getDiscActor()->startDraw(_userActor->getDiscActor()->getDiscPosition());
+		}
+	}
+	else {
+		if (_userActor->getDiscActor()->getState() == DISK_STATE_DRAWN) {
+			_userActor->getDiscActor()->endDraw(_userActor->getDiscActor()->getDiscPosition());
+		}
+	}
+}
+
+bool AGameControllActor::observableUpdate(GameNotifications notification, Observable<GameNotifications>* src)
+{
+	return true;
+}
+
+void AGameControllActor::observableRevoke(GameNotifications notification, Observable<GameNotifications>* src)
+{
 }
 
 void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputComponent)
@@ -211,12 +233,12 @@ void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition informatio
 	actor->setShieldArmPosition(createVector(information.off_hand_pos()));
 	actor->setShieldArmRotation(createQuat(information.off_hand_rot()));
 
-	if (UWorld* g = GetWorld())
+	/*if (UWorld* g = GetWorld())
 	{
 		drawGizmo(GetWorld(), createVector(information.head_pos()), createQuat(information.head_rot()));
 		drawGizmo(GetWorld(), createVector(information.main_hand_pos()), createQuat(information.main_hand_rot()));
 		drawGizmo(GetWorld(), createVector(information.off_hand_pos()), createQuat(information.off_hand_rot()));
-	}
+	}*/
 }
 
 void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation information)

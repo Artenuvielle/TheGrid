@@ -7,12 +7,13 @@
 #include "HAL/Runnable.h"
 #include "GameFramework/Pawn.h"
 #include "PlayerActor.h"
+#include "Observer.h"
 #include "GameControllActor.generated.h"
 
 class NetworkWorker;
 
 UCLASS()
-class THEGRID_API AGameControllActor : public APawn
+class THEGRID_API AGameControllActor : public APawn, public Observer<GameNotifications>
 {
 	GENERATED_BODY()
 
@@ -26,6 +27,8 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent);
 	void requestGameStart();
 	void updateTrigger(float value);
+	bool observableUpdate(GameNotifications notification, Observable<GameNotifications>* src) override;
+	void observableRevoke(GameNotifications notification, Observable<GameNotifications>* src) override;
 
 private:
 	NetworkWorker* _networkWorker;
@@ -33,8 +36,8 @@ private:
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
 	PlayerFaction _setFaction;
-	bool _gameRunning = false;
-	int _userId = -1;
+	bool _gameRunning;
+	int _userId;
 
 	void sendPositionInformation();
 	void handleGameStateBroadcast(GameInformation information);
