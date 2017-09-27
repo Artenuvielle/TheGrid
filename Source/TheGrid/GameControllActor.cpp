@@ -90,6 +90,13 @@ void AGameControllActor::Tick(float deltaSeconds)
 		handleSToCPacket(packets[i].peerId, packets[i].packet);
 	}
 
+	_userActor->setHeadPosition(_headComponent->GetComponentLocation());
+	_userActor->setHeadRotation(FQuat(_headComponent->GetComponentRotation()));
+	_userActor->setDiskArmPosition(_diskArmComponent->GetComponentLocation());
+	_userActor->setDiskArmRotation(FQuat(_diskArmComponent->GetComponentRotation()));
+	_userActor->setShieldArmPosition(_shieldArmComponent->GetComponentLocation());
+	_userActor->setShieldArmRotation(FQuat(_shieldArmComponent->GetComponentRotation()));
+
 	if (_userId >= 0) {
 		sendPositionInformation();
 	}
