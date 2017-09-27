@@ -65,7 +65,8 @@ void AGameControllActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
+	//_networkWorker = new NetworkWorker("127.0.0.1", 13244);
+	_networkWorker = new NetworkWorker("10.155.39.1", 13244);
 	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_userActor->Init(userFaction, false);
