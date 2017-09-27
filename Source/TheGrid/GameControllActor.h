@@ -22,7 +22,7 @@ public:
 	~AGameControllActor();
 	void BeginPlay();
 	void Tick(float);
-	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData);
+	virtual void handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet);
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent);
 	void requestGameStart();
 	void updateTrigger(float value);
@@ -37,14 +37,14 @@ private:
 	int _userId = -1;
 
 	void sendPositionInformation();
-	void handleGameStateBroadcast(GameInformation* information);
-	void handlePlayerIdentification(PlayerInformation* information);
-	void handlePlayerPositionBroadcast(PlayerPosition* information);
-	void handlePlayerChangeLifeBroadcast(PlayerCounterInformation* information);
-	void handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation* information);
-	void handleDiskStatusBroadcast(DiskStatusInformation* information);
-	void handleDiskThrowBroadcast(DiskThrowInformation* information);
-	void handleDiskPositionBroadcast(DiskPosition* information);
+	void handleGameStateBroadcast(GameInformation information);
+	void handlePlayerIdentification(PlayerInformation information);
+	void handlePlayerPositionBroadcast(PlayerPosition information);
+	void handlePlayerChangeLifeBroadcast(PlayerCounterInformation information);
+	void handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation information);
+	void handleDiskStatusBroadcast(DiskStatusInformation information);
+	void handleDiskThrowBroadcast(DiskThrowInformation information);
+	void handleDiskPositionBroadcast(DiskPosition information);
 };
 
 
@@ -52,8 +52,7 @@ private:
 
 struct PacketInformation {
 	unsigned short peerId;
-	SToCPacketType* header;
-	std::string serializedData;
+	ProtobufMessagePacket* packet;
 };
 
 class NetworkWorker : public FRunnable, public SToCPacketHandler
@@ -67,7 +66,7 @@ public:
 
 	virtual void handleConnect();
 	virtual void handleDisconnect();
-	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData);
+	virtual void handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet);
 
 	virtual bool Init();
 	virtual uint32 Run();

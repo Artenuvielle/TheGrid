@@ -1,6 +1,14 @@
 #include "Network.h"
 
 #include <iostream>
+#include <string>
+
+template<typename S> inline
+S* deserialize(std::string serializedData) {
+	S* ret = new S();
+	ret->ParseFromString(serializedData);
+	return ret;
+}
 
 Client::Client() {
 	_enetHost = enet_host_create(NULL, 1, 2, 57600 / 8, 14400 / 8);
@@ -89,16 +97,15 @@ void Client::networkLoop() {
 	if (isConnected() && !netwokLoopRunning) {
 		netwokLoopRunning = true;
 		ENetEvent event;
-		SToCPacketType* header;
+		ProtobufMessagePacket* packet;
 		std::string serializedData;
 		while (keepConnection) {
 			while (enet_host_service(_enetHost, &event, 0) > 0) {
 				switch (event.type) {
 				case ENET_EVENT_TYPE_RECEIVE:
-					header = reinterpret_cast<SToCPacketType*>(event.packet->data);
-					serializedData = std::string(reinterpret_cast<const char*>(event.packet->data + sizeof(SToCPacketType)), event.packet->dataLength - sizeof(SToCPacketType));
+					packet = deserialize<ProtobufMessagePacket>(std::string(reinterpret_cast<const char*>(event.packet->data), event.packet->dataLength));
 					if (_packetHandler != nullptr) {
-						_packetHandler->handleSToCPacket(event.peer->incomingPeerID, header, serializedData);
+						_packetHandler->handleSToCPacket(event.peer->incomingPeerID, packet);
 					}
 					enet_packet_destroy(event.packet);
 					break;
@@ -114,6 +121,13 @@ void Client::networkLoop() {
 		}
 		netwokLoopRunning = false;
 	}
+}
+
+void Client::sendPacket(ProtobufMessagePacket* payload, bool reliable) {
+	std::string serializedPayload;
+	payload->SerializeToString(&serializedPayload);
+	ENetPacket* enetPacket = enet_packet_create(serializedPayload.c_str(), serializedPayload.size(), reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
+	enet_peer_send(_peer, 1, enetPacket);
 }
 
 bool Client::isConnected() {

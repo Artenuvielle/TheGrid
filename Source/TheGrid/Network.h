@@ -7,7 +7,7 @@ class SToCPacketHandler {
 public:
 	virtual void handleConnect() = 0;
 	virtual void handleDisconnect() = 0;
-	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData) = 0;
+	virtual void handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet) = 0;
 };
 
 class Client {
@@ -23,7 +23,7 @@ public:
 
 	bool isConnected();
 	void networkLoop();
-	template<typename S> void sendPacket(CToSPacketType header, S* data, bool reliable = false);
+	void sendPacket(ProtobufMessagePacket* payload, bool reliable = false);
 private:
 	SToCPacketHandler* _packetHandler;
 
@@ -35,5 +35,3 @@ private:
 };
 
 void networkLoopOnClient(void* client);
-
-#include "Network.inl"

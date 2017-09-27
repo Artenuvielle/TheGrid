@@ -1,5 +1,32 @@
 syntax = "proto2";
 
+
+message ProtobufMessagePacket {
+	enum Header {
+		STOC_PACKET_TYPE_GAME_STATE_BROADCAST = 101;
+		STOC_PACKET_TYPE_PLAYER_IDENTIFICATION = 102;
+		STOC_PACKET_TYPE_PLAYER_POSITION_BROADCAST = 103;
+		STOC_PACKET_TYPE_PLAYER_CHANGED_LIFE_BROADCAST = 104;
+		STOC_PACKET_TYPE_PLAYER_CHANGED_SHIELD_CHARGE_BROADCAST = 105;
+		STOC_PACKET_TYPE_DISK_STATUS_BROADCAST = 106;
+		STOC_PACKET_TYPE_DISK_THROW_BROADCAST = 107;
+		STOC_PACKET_TYPE_DISK_POSITION_BROADCAST = 108;
+		CTOS_PACKET_TYPE_START_GAME_REQUEST = 201;
+		CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION = 202;
+		CTOS_PACKET_TYPE_PLAYER_THROW_INFORMATION = 203;
+	}
+	required Header header = 1;
+
+	optional PlayerInformation player_information = 2;
+	optional GameInformation game_information = 3;
+	optional PlayerCounterInformation player_counter_information = 4;
+	optional PlayerPosition player_position = 5;
+	optional DiskStatusInformation disk_status_information = 6;
+	optional DiskThrowInformation disk_throw_information = 7;
+	optional DiskPosition disk_position = 8;
+}
+
+
 message PositionPacketType {
 	required float x = 1;
 	required float y = 2;

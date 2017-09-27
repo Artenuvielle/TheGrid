@@ -18,13 +18,6 @@ void drawGizmo(UWorld* world, FVector position, FQuat rotation, int length = 15,
 	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::ForwardVector), FColor(255, 0, 0), false, 0.1, 0, width);
 }
 
-template<typename S> inline
-S* deserialize(std::string serializedData) {
-	S* ret = new S();
-	ret->ParseFromString(serializedData);
-	return ret;
-}
-
 FVector createVector(PositionPacketType position) {
 	return FVector(-position.z(), position.x(), position.y());
 }
@@ -65,8 +58,8 @@ void AGameControllActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//_networkWorker = new NetworkWorker("127.0.0.1", 13244);
-	_networkWorker = new NetworkWorker("10.155.39.1", 13244);
+	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
+	//_networkWorker = new NetworkWorker("10.155.39.1", 13244);
 	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_userActor->Init(userFaction, false);
@@ -94,7 +87,7 @@ void AGameControllActor::Tick(float deltaSeconds)
 	TArray<PacketInformation> packets = _networkWorker->getPacketInformation();
 	int lastIndex = packets.Num() - 1;
 	for (int i = 0; i <= lastIndex; i++) {
-		handleSToCPacket(packets[i].peerId, packets[i].header, packets[i].serializedData);
+		handleSToCPacket(packets[i].peerId, packets[i].packet);
 	}
 
 	if (_userId >= 0) {
@@ -119,7 +112,10 @@ void AGameControllActor::sendPositionInformation()
 	pp->set_allocated_main_hand_rot(&main_hand_rot);
 	pp->set_allocated_off_hand_pos(&off_hand_pos);
 	pp->set_allocated_off_hand_rot(&off_hand_rot);
-	_networkWorker->getClient()->sendPacket<PlayerPosition>(CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION, pp);
+	ProtobufMessagePacket* packet = new ProtobufMessagePacket();
+	packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION);
+	packet->set_allocated_player_position(pp);
+	_networkWorker->getClient()->sendPacket(packet);
 }
 
 void AGameControllActor::requestGameStart()
@@ -128,7 +124,10 @@ void AGameControllActor::requestGameStart()
 		UE_LOG(LogTemp, Display, TEXT("requesting game start"));
 		GameInformation* gi = new GameInformation();
 		gi->set_is_running(true);
-		_networkWorker->getClient()->sendPacket(CTOS_PACKET_TYPE_START_GAME_REQUEST, gi, true);
+		ProtobufMessagePacket* packet = new ProtobufMessagePacket();
+		packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_START_GAME_REQUEST);
+		packet->set_allocated_game_information(gi);
+		_networkWorker->getClient()->sendPacket(packet, true);
 	}
 }
 
@@ -144,96 +143,96 @@ void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputCompone
 	InputComponent->BindAxis("RightTriggerAnalog", this, &AGameControllActor::updateTrigger);
 }
 
-void AGameControllActor::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData)
+void AGameControllActor::handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet)
 {
-	switch (*header) {
-	case STOC_PACKET_TYPE_GAME_STATE_BROADCAST:
-		handleGameStateBroadcast(deserialize<GameInformation>(serializedData));
+	switch (packet->header()) {
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_GAME_STATE_BROADCAST:
+		handleGameStateBroadcast(packet->game_information());
 		break;
-	case STOC_PACKET_TYPE_PLAYER_IDENTIFICATION:
-		handlePlayerIdentification(deserialize<PlayerInformation>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_IDENTIFICATION:
+		handlePlayerIdentification(packet->player_information());
 		break;
-	case STOC_PACKET_TYPE_PLAYER_POSITION_BROADCAST:
-		handlePlayerPositionBroadcast(deserialize<PlayerPosition>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_POSITION_BROADCAST:
+		handlePlayerPositionBroadcast(packet->player_position());
 		break;
-	case STOC_PACKET_TYPE_PLAYER_CHANGED_LIFE_BROADCAST:
-		handlePlayerChangeLifeBroadcast(deserialize<PlayerCounterInformation>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_CHANGED_LIFE_BROADCAST:
+		handlePlayerChangeLifeBroadcast(packet->player_counter_information());
 		break;
-	case STOC_PACKET_TYPE_PLAYER_CHANGED_SHIELD_CHARGE_BROADCAST:
-		handlePlayerChangeShieldChargeBroadcast(deserialize<PlayerCounterInformation>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_CHANGED_SHIELD_CHARGE_BROADCAST:
+		handlePlayerChangeShieldChargeBroadcast(packet->player_counter_information());
 		break;
-	case STOC_PACKET_TYPE_DISK_STATUS_BROADCAST:
-		handleDiskStatusBroadcast(deserialize<DiskStatusInformation>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_STATUS_BROADCAST:
+		handleDiskStatusBroadcast(packet->disk_status_information());
 		break;
-	case STOC_PACKET_TYPE_DISK_THROW_BROADCAST:
-		handleDiskThrowBroadcast(deserialize<DiskThrowInformation>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_THROW_BROADCAST:
+		handleDiskThrowBroadcast(packet->disk_throw_information());
 		break;
-	case STOC_PACKET_TYPE_DISK_POSITION_BROADCAST:
-		handleDiskPositionBroadcast(deserialize<DiskPosition>(serializedData));
+	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_POSITION_BROADCAST:
+		handleDiskPositionBroadcast(packet->disk_position());
 		break;
 	}
 }
 
-void AGameControllActor::handleGameStateBroadcast(GameInformation* information)
+void AGameControllActor::handleGameStateBroadcast(GameInformation information)
 {
-	if (information->is_running() && !_gameRunning) {
+	if (information.is_running() && !_gameRunning) {
 		UE_LOG(LogTemp, Display, TEXT("game starting"));
 		_gameRunning = true;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("handleGameStateBroadcast"));
 }
 
-void AGameControllActor::handlePlayerIdentification(PlayerInformation* information)
+void AGameControllActor::handlePlayerIdentification(PlayerInformation information)
 {
-	_userId = information->player_id();
-	_setFaction = information->faction_id() == 0 ? userFaction : enemyFaction;
+	_userId = information.player_id();
+	_setFaction = information.faction_id() == 0 ? userFaction : enemyFaction;
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerIdentification"));
 }
 
-void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition* information)
+void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition information)
 {
 	APlayerActor* actor = _userActor;
-	if (information->faction_id() != _setFaction)
+	if (information.faction_id() != _setFaction)
 	{
 		actor = _enemyActor;
 	}
 
-	actor->setHeadPosition(createVector(information->head_pos()));
-	actor->setHeadRotation(createQuat(information->head_rot()));
-	actor->setDiskArmPosition(createVector(information->main_hand_pos()));
-	actor->setDiskArmRotation(createQuat(information->main_hand_rot()));
-	actor->setShieldArmPosition(createVector(information->off_hand_pos()));
-	actor->setShieldArmRotation(createQuat(information->off_hand_rot()));
+	actor->setHeadPosition(createVector(information.head_pos()));
+	actor->setHeadRotation(createQuat(information.head_rot()));
+	actor->setDiskArmPosition(createVector(information.main_hand_pos()));
+	actor->setDiskArmRotation(createQuat(information.main_hand_rot()));
+	actor->setShieldArmPosition(createVector(information.off_hand_pos()));
+	actor->setShieldArmRotation(createQuat(information.off_hand_rot()));
 
 	if (UWorld* g = GetWorld())
 	{
-		drawGizmo(GetWorld(), createVector(information->head_pos()), createQuat(information->head_rot()));
-		drawGizmo(GetWorld(), createVector(information->main_hand_pos()), createQuat(information->main_hand_rot()));
-		drawGizmo(GetWorld(), createVector(information->off_hand_pos()), createQuat(information->off_hand_rot()));
+		drawGizmo(GetWorld(), createVector(information.head_pos()), createQuat(information.head_rot()));
+		drawGizmo(GetWorld(), createVector(information.main_hand_pos()), createQuat(information.main_hand_rot()));
+		drawGizmo(GetWorld(), createVector(information.off_hand_pos()), createQuat(information.off_hand_rot()));
 	}
 }
 
-void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation* information)
+void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeLifeBroadcast"));
 }
 
-void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation* information)
+void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeShieldChargeBroadcast"));
 }
 
-void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation* information)
+void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskStatusBroadcast"));
 }
 
-void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation* information)
+void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskThrowBroadcast"));
 }
 
-void AGameControllActor::handleDiskPositionBroadcast(DiskPosition* information)
+void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 {
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskPositionBroadcast"));
 }
@@ -282,7 +281,7 @@ void NetworkWorker::handleConnect() {}
 
 void NetworkWorker::handleDisconnect() {}
 
-void NetworkWorker::handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData) {
+void NetworkWorker::handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet) {
 	_mutex.Lock();
 	while (_packets.Num() >= MAX_PACKETS_PER_TICK) {
 		_mutex.Unlock();
@@ -290,7 +289,7 @@ void NetworkWorker::handleSToCPacket(unsigned short peerId, SToCPacketType* head
 		FPlatformProcess::Sleep(0.1);
 		_mutex.Lock();
 	}
-	_packets.Add({ peerId, header, serializedData });
+	_packets.Add({ peerId, packet });
 	_mutex.Unlock();
 }
 
