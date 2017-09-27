@@ -1,20 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PlayerActor.h"
-#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
-
-template <typename T>
-T* getContent(FString path) {
-	ConstructorHelpers::FObjectFinder<T> meshFinder(*path);
-	return meshFinder.Object;
-}
-
-AStaticMeshActor* spawnMeshActor(UWorld* world, UStaticMesh* mesh) {
-	AStaticMeshActor* meshActor = world->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
-	meshActor->GetStaticMeshComponent()->SetStaticMesh(mesh);
-	meshActor->SetMobility(EComponentMobility::Movable);
-	return meshActor;
-}
 
 UStaticMesh* APlayerActor::_torsoMesh      = nullptr;
 UStaticMesh* APlayerActor::_headMesh       = nullptr;
@@ -53,6 +39,10 @@ void APlayerActor::BeginPlay()
 void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 {
 	ownFaction = faction;
+
+	_discActor = GetWorld()->SpawnActor<ADiscActor>(ADiscActor::StaticClass());
+	_discActor->Init(enemyFaction);
+
 	if (drawModel)
 	{
 		_torsoActor = spawnMeshActor(GetWorld(), _torsoMesh);
@@ -142,11 +132,21 @@ FQuat APlayerActor::getShieldArmRotation()
 	return _shieldArmRotation;
 }
 
+ADiscActor * APlayerActor::getDiscActor()
+{
+	return _discActor;
+}
+
 void APlayerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	updatePositions();
+
+	if (_discActor->getState() == DISK_STATE_READY) {
+		_discActor->setDiscPosition(_diskArmPosition);
+		_discActor->setDiscRotation(_diskArmRotation);
+	}
 }
 
 void APlayerActor::updatePositions()

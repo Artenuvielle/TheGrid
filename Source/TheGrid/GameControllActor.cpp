@@ -56,6 +56,11 @@ AGameControllActor::AGameControllActor() : Super() {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+AGameControllActor::~AGameControllActor()
+{
+	delete _networkWorker;
+}
+
 void AGameControllActor::BeginPlay()
 {
 	Super::BeginPlay();
@@ -280,6 +285,7 @@ void NetworkWorker::handleSToCPacket(unsigned short peerId, SToCPacketType* head
 	_mutex.Lock();
 	while (_packets.Num() >= MAX_PACKETS_PER_TICK) {
 		_mutex.Unlock();
+		UE_LOG(LogTemp, Display, TEXT("Packet buffer overflowing"));
 		FPlatformProcess::Sleep(0.1);
 		_mutex.Lock();
 	}
@@ -290,7 +296,7 @@ void NetworkWorker::handleSToCPacket(unsigned short peerId, SToCPacketType* head
 bool NetworkWorker::Init()
 {
 	if (_client->connect(_host, _port)) {
-		UE_LOG(LogTemp, Warning, TEXT("connection established"));
+		UE_LOG(LogTemp, Display, TEXT("connection established"));
 		return true;
 	}
 	else {

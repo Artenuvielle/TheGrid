@@ -19,6 +19,7 @@ class THEGRID_API AGameControllActor : public APawn
 public:	
 	// Sets default values for this actor's properties
 	AGameControllActor();
+	~AGameControllActor();
 	void BeginPlay();
 	void Tick(float);
 	virtual void handleSToCPacket(unsigned short peerId, SToCPacketType* header, std::string serializedData);
@@ -47,7 +48,7 @@ private:
 };
 
 
-#define MAX_PACKETS_PER_TICK 20
+#define MAX_PACKETS_PER_TICK 512
 
 struct PacketInformation {
 	unsigned short peerId;
