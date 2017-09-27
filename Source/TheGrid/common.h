@@ -1,6 +1,9 @@
 #ifndef _Common_H_
 #define _Common_H_
 
+#define _logFrames_
+#define _simulate_
+
 enum PlayerFaction {
 	PLAYER_FACTION_BLUE = 0,
 	PLAYER_FACTION_ORANGE

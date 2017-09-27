@@ -8,6 +8,7 @@
 #include "GameFramework/Pawn.h"
 #include "PlayerActor.h"
 #include "Observer.h"
+#include "common.h"
 #include "GameControllActor.generated.h"
 
 class NetworkWorker;
@@ -29,6 +30,9 @@ public:
 	void updateTrigger(float value);
 	bool observableUpdate(GameNotifications notification, Observable<GameNotifications>* src) override;
 	void observableRevoke(GameNotifications notification, Observable<GameNotifications>* src) override;
+#ifdef _logFrames_
+	void switchLoggingOnOff();
+#endif
 
 private:
 	NetworkWorker* _networkWorker;
@@ -48,6 +52,12 @@ private:
 	void handleDiskStatusBroadcast(DiskStatusInformation information);
 	void handleDiskThrowBroadcast(DiskThrowInformation information);
 	void handleDiskPositionBroadcast(DiskPosition information);
+
+#ifdef _logFrames_
+	float _triggerPush;
+	bool _startedLogging;
+	float _time;
+#endif
 };
 
 

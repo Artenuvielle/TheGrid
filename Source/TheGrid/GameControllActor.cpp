@@ -10,6 +10,11 @@
 #include "GameFramework/Character.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 
+#ifdef _logFrames_
+#include <fstream>
+std::ofstream logFile;
+#endif
+
 LogStream logStream;
 
 void drawGizmo(UWorld* world, FVector position, FQuat rotation, int length = 15, int width = 2) {
@@ -50,11 +55,20 @@ AGameControllActor::AGameControllActor() : Super() {
 
 	_gameRunning = false;
 	_userId = -1;
+
+#ifdef _logFrames_
+	_triggerPush = 0.0;
+	_startedLogging = false;
+	logFile.open("tracking_log.txt");
+#endif
 }
 
 AGameControllActor::~AGameControllActor()
 {
 	delete _networkWorker;
+#ifdef _logFrames_
+	logFile.close();
+#endif
 }
 
 void AGameControllActor::BeginPlay()
@@ -103,6 +117,25 @@ void AGameControllActor::Tick(float deltaSeconds)
 	if (_userId >= 0) {
 		sendPositionInformation();
 	}
+
+#ifdef _logFrames_
+	_time += deltaSeconds;
+	if (_startedLogging) {
+		FVector head_position = _headComponent->GetComponentLocation();
+		FVector wand_position = _diskArmComponent->GetComponentLocation();
+		FVector shield_position = _shieldArmComponent->GetComponentLocation();
+		FQuat head_orientation = FQuat(_headComponent->GetComponentRotation());
+		FQuat wand_orientation = FQuat(_diskArmComponent->GetComponentRotation());
+		FQuat shield_orientation = FQuat(_shieldArmComponent->GetComponentRotation());
+		logFile << "		simSteps.push(SimStep(" << _time << ", " << _triggerPush << ", ";
+		logFile << "FVector(" << head_position.X << ", " << head_position.Y << ", " << head_position.Z << "), ";
+		logFile << "FQuat(" << head_orientation.X << ", " << head_orientation.Y << ", " << head_orientation.Z << ", " << head_orientation.W << "), ";
+		logFile << "FVector(" << wand_position.X << ", " << wand_position.Y << ", " << wand_position.Z << "), ";
+		logFile << "FQuat(" << wand_orientation.X << ", " << wand_orientation.Y << ", " << wand_orientation.Z << ", " << wand_orientation.W << "), ";
+		logFile << "FVector(" << shield_position.X << ", " << shield_position.Y << ", " << shield_position.Z << "), ";
+		logFile << "FQuat(" << shield_orientation.X << ", " << shield_orientation.Y << ", " << shield_orientation.Z << ", " << shield_orientation.W << ")));\n";
+	}
+#endif
 }
 
 void AGameControllActor::sendPositionInformation()
@@ -153,6 +186,9 @@ void AGameControllActor::updateTrigger(float value)
 			_userActor->getDiscActor()->endDraw(_userActor->getDiscActor()->getDiscPosition());
 		}
 	}
+#ifdef _logFrames_
+	_triggerPush = value;
+#endif
 }
 
 bool AGameControllActor::observableUpdate(GameNotifications notification, Observable<GameNotifications>* src)
@@ -170,7 +206,17 @@ void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputCompone
 	InputComponent->BindAction("MenuButtonLeft", EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
 	InputComponent->BindKey(EKeys::G, EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
 	InputComponent->BindAxis("RightTriggerAnalog", this, &AGameControllActor::updateTrigger);
+#ifdef _logFrames_
+	InputComponent->BindAction("MenuButtonRight", EInputEvent::IE_Pressed, this, &AGameControllActor::switchLoggingOnOff);
+#endif
 }
+
+#ifdef _logFrames_
+void AGameControllActor::switchLoggingOnOff()
+{
+	_startedLogging = !_startedLogging;
+}
+#endif
 
 void AGameControllActor::handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet)
 {
