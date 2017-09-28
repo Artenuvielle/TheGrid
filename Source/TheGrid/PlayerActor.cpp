@@ -143,7 +143,7 @@ void APlayerActor::Tick(float DeltaTime)
 
 	updatePositions();
 
-	if (_discActor->getState() == DISK_STATE_READY) {
+	if (_discActor->getState() == DISK_STATE_READY || _discActor->getState() == DISK_STATE_DRAWN) {
 		FVector discArmUp   = _diskArmRotation.RotateVector(FVector::UpVector);
 		FVector shieldArmUp = _shieldArmRotation.RotateVector(FVector::UpVector);
 		_discActor->setDiscPosition(_diskArmPosition + discArmUp * 6.5);

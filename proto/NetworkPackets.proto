@@ -85,4 +85,5 @@ message DiskPosition {
 	required int32 player_id = 1;
 	required int32 faction_id = 2;
 	required PositionPacketType disk_pos = 3;
+	required OrientationPacketType disk_rot = 4;
 }

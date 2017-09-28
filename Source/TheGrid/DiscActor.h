@@ -30,6 +30,7 @@ public:
 	void setDiscPosition(FVector);
 	void setDiscRotation(FQuat);
 	FVector getDiscPosition();
+	FVector getDiscMomentum();
 	FQuat getDiscRotation();
 	DiskState getState();
 
@@ -37,6 +38,7 @@ public:
 	bool endDraw(FVector pos);
 	bool forceReturn();
 	bool forceThrow(FVector pos, FVector momentum);
+	bool catchDisk();
 private:
 	FVector _discPosition;
 	FQuat _discRotation;

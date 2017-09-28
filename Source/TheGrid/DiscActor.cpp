@@ -63,6 +63,11 @@ FVector ADiscActor::getDiscPosition()
 	return _discPosition;
 }
 
+FVector ADiscActor::getDiscMomentum()
+{
+	return _momentum;
+}
+
 FQuat ADiscActor::getDiscRotation()
 {
 	return _discRotation;
@@ -109,6 +114,15 @@ bool ADiscActor::forceThrow(FVector position, FVector mom) {
 		if (endDraw(position)) {
 			return true;
 		}
+	}
+	return false;
+}
+
+bool ADiscActor::catchDisk()
+{
+	if (_state == DISK_STATE_RETURNING) {
+		_state = DISK_STATE_READY;
+		return true;
 	}
 	return false;
 }

@@ -1,7 +1,7 @@
 #ifndef _Common_H_
 #define _Common_H_
 
-#define _logFrames_
+//#define _logFrames_
 #define _simulate_
 
 enum PlayerFaction {

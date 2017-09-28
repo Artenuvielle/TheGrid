@@ -30,11 +30,16 @@ public:
 	void updateTrigger(float value);
 	bool observableUpdate(GameNotifications notification, Observable<GameNotifications>* src) override;
 	void observableRevoke(GameNotifications notification, Observable<GameNotifications>* src) override;
+
+#ifdef _simulate_
+	void startSimulation();
+#endif
 #ifdef _logFrames_
 	void switchLoggingOnOff();
 #endif
 
 private:
+	float _time;
 	NetworkWorker* _networkWorker;
 	USceneComponent* _headComponent, *_diskArmComponent, *_shieldArmComponent;
 	APlayerActor* _userActor;
@@ -53,10 +58,14 @@ private:
 	void handleDiskThrowBroadcast(DiskThrowInformation information);
 	void handleDiskPositionBroadcast(DiskPosition information);
 
+#ifdef _simulate_
+	float _simulateStartTime;
+	float _simTriggerPush;
+#endif
 #ifdef _logFrames_
 	float _triggerPush;
+	float _logStartTime;
 	bool _startedLogging;
-	float _time;
 #endif
 };
 

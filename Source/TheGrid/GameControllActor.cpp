@@ -10,6 +10,10 @@
 #include "GameFramework/Character.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 
+#ifdef _simulate_
+#include "Simulation.h"
+#endif
+
 #ifdef _logFrames_
 #include <fstream>
 std::ofstream logFile;
@@ -56,6 +60,9 @@ AGameControllActor::AGameControllActor() : Super() {
 	_gameRunning = false;
 	_userId = -1;
 
+#ifdef _simulate_
+	_simulateStartTime = 0;
+#endif
 #ifdef _logFrames_
 	_triggerPush = 0.0;
 	_startedLogging = false;
@@ -100,12 +107,26 @@ void AGameControllActor::BeginPlay()
 
 void AGameControllActor::Tick(float deltaSeconds)
 {
+	_time += deltaSeconds;
 	Super::Tick(deltaSeconds);
 	TArray<PacketInformation> packets = _networkWorker->getPacketInformation();
 	int lastIndex = packets.Num() - 1;
 	for (int i = 0; i <= lastIndex; i++) {
 		handleSToCPacket(packets[i].peerId, packets[i].packet);
 	}
+
+#ifdef _simulate_
+	if (_simulateStartTime > 0) {
+		SimStep simStep = getSimulationStep(_time - _simulateStartTime);
+		_headComponent->SetWorldLocation(simStep.head_position);
+		_headComponent->SetWorldRotation(simStep.head_orientation);
+		_diskArmComponent->SetRelativeLocation(simStep.disk_arm_position);
+		_diskArmComponent->SetRelativeRotation(simStep.disk_arm_orientation);
+		_shieldArmComponent->SetRelativeLocation(simStep.shield_arm_position);
+		_shieldArmComponent->SetRelativeRotation(simStep.shield_arm_orientation);
+		_simTriggerPush = simStep.triggerPush;
+	}
+#endif
 
 	_userActor->setHeadPosition(_headComponent->GetComponentLocation());
 	_userActor->setHeadRotation(FQuat(_headComponent->GetComponentRotation()));
@@ -119,7 +140,6 @@ void AGameControllActor::Tick(float deltaSeconds)
 	}
 
 #ifdef _logFrames_
-	_time += deltaSeconds;
 	if (_startedLogging) {
 		FVector head_position = _headComponent->GetComponentLocation();
 		FVector wand_position = _diskArmComponent->GetComponentLocation();
@@ -127,7 +147,7 @@ void AGameControllActor::Tick(float deltaSeconds)
 		FQuat head_orientation = FQuat(_headComponent->GetComponentRotation());
 		FQuat wand_orientation = FQuat(_diskArmComponent->GetComponentRotation());
 		FQuat shield_orientation = FQuat(_shieldArmComponent->GetComponentRotation());
-		logFile << "		simSteps.push(SimStep(" << _time << ", " << _triggerPush << ", ";
+		logFile << "		simSteps.push(SimStep(" << (_time - _logStartTime) << ", " << _triggerPush << ", ";
 		logFile << "FVector(" << head_position.X << ", " << head_position.Y << ", " << head_position.Z << "), ";
 		logFile << "FQuat(" << head_orientation.X << ", " << head_orientation.Y << ", " << head_orientation.Z << ", " << head_orientation.W << "), ";
 		logFile << "FVector(" << wand_position.X << ", " << wand_position.Y << ", " << wand_position.Z << "), ";
@@ -176,12 +196,18 @@ void AGameControllActor::requestGameStart()
 
 void AGameControllActor::updateTrigger(float value)
 {
-	if (value > 0.5) {
+#ifdef _simulate_
+	if (_simulateStartTime > 0) {
+		value = _simTriggerPush;
+	}
+#endif
+	std::cout << value << std::endl;
+	if (value > 0.6) {
 		if (_userActor->getDiscActor()->getState() == DISK_STATE_READY) {
 			_userActor->getDiscActor()->startDraw(_userActor->getDiscActor()->getDiscPosition());
 		}
 	}
-	else {
+	else if (value < 0.4) {
 		if (_userActor->getDiscActor()->getState() == DISK_STATE_DRAWN) {
 			_userActor->getDiscActor()->endDraw(_userActor->getDiscActor()->getDiscPosition());
 		}
@@ -193,6 +219,23 @@ void AGameControllActor::updateTrigger(float value)
 
 bool AGameControllActor::observableUpdate(GameNotifications notification, Observable<GameNotifications>* src)
 {
+	switch (notification) {
+	case GAME_NOTIFICATION_DISK_THROWN:
+		if (src == _userActor->getDiscActor()) {
+			DiskThrowInformation* dti = new DiskThrowInformation();
+			dti->set_player_id(_userId);
+			dti->set_faction_id(userFaction);
+			PositionPacketType disk_pos = createPosition(_userActor->getDiscActor()->getDiscPosition());
+			PositionPacketType disk_momentum = createPosition(_userActor->getDiscActor()->getDiscMomentum());
+			dti->set_allocated_disk_pos(&disk_pos);
+			dti->set_allocated_disk_momentum(&disk_momentum);
+			ProtobufMessagePacket* packet = new ProtobufMessagePacket();
+			packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_PLAYER_THROW_INFORMATION);
+			packet->set_allocated_disk_throw_information(dti);
+			_networkWorker->getClient()->sendPacket(packet, true);
+		}
+		break;
+	}
 	return true;
 }
 
@@ -200,12 +243,23 @@ void AGameControllActor::observableRevoke(GameNotifications notification, Observ
 {
 }
 
+#ifdef _simulate_
+void AGameControllActor::startSimulation()
+{
+	initSimulation();
+	_simulateStartTime = _time;
+}
+#endif
+
 void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputComponent)
 {
 	Super::SetupPlayerInputComponent(InputComponent);
 	InputComponent->BindAction("MenuButtonLeft", EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
 	InputComponent->BindKey(EKeys::G, EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
 	InputComponent->BindAxis("RightTriggerAnalog", this, &AGameControllActor::updateTrigger);
+#ifdef _simulate_
+	InputComponent->BindKey(EKeys::X, EInputEvent::IE_Pressed, this, &AGameControllActor::startSimulation);
+#endif
 #ifdef _logFrames_
 	InputComponent->BindAction("MenuButtonRight", EInputEvent::IE_Pressed, this, &AGameControllActor::switchLoggingOnOff);
 #endif
@@ -214,6 +268,7 @@ void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputCompone
 #ifdef _logFrames_
 void AGameControllActor::switchLoggingOnOff()
 {
+	_logStartTime = _time;
 	_startedLogging = !_startedLogging;
 }
 #endif
@@ -299,17 +354,47 @@ void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterIn
 
 void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation information)
 {
+	if (information.player_id() == _userId) {
+		if (information.disk_status_id() == DISK_STATE_RETURNING) {
+			_userActor->getDiscActor()->forceReturn();
+		}
+		else if(information.disk_status_id() == DISK_STATE_READY) {
+			_userActor->getDiscActor()->catchDisk();
+		}
+	}
+	else {
+		if (information.disk_status_id() == DISK_STATE_RETURNING) {
+			_enemyActor->getDiscActor()->forceReturn();
+		}
+		else if (information.disk_status_id() == DISK_STATE_READY) {
+			_enemyActor->getDiscActor()->catchDisk();
+		}
+	}
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskStatusBroadcast"));
 }
 
 void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation information)
 {
+	if (information.player_id() != _userId) {
+		_enemyActor->getDiscActor()->forceThrow(createVector(information.disk_pos()), createVector(information.disk_momentum()));
+	}
 	UE_LOG(LogTemp, Warning, TEXT("handleDiskThrowBroadcast"));
 }
 
 void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 {
-	UE_LOG(LogTemp, Warning, TEXT("handleDiskPositionBroadcast"));
+	if (information.player_id() == _userId) {
+		if (_userActor->getDiscActor()->getState() == DISK_STATE_FREE_FLY || _userActor->getDiscActor()->getState() == DISK_STATE_RETURNING) {
+			_userActor->getDiscActor()->setDiscPosition(createVector(information.disk_pos()));
+			_userActor->getDiscActor()->setDiscRotation(createQuat(information.disk_rot()));
+		}
+	}
+	else {
+		if (_enemyActor->getDiscActor()->getState() == DISK_STATE_FREE_FLY || _enemyActor->getDiscActor()->getState() == DISK_STATE_RETURNING) {
+			_enemyActor->getDiscActor()->setDiscPosition(createVector(information.disk_pos()));
+			_enemyActor->getDiscActor()->setDiscRotation(createQuat(information.disk_rot()));
+		}
+	}
 }
 
 
