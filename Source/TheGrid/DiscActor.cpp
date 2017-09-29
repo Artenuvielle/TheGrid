@@ -15,10 +15,10 @@ ADiscActor::ADiscActor()
 	_discRotation = FQuat();
 
 	if (!_discMeshInner) {
-		_discMeshInner = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/disk_blue_inner.disk_blue_inner'");
-		_discMeshOuter = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/disk_blue_outer.disk_blue_outer'");
-		_blueMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/blue/robotMaterialBlue.robotMaterialBlue'");
-		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/orange/robotMaterialOrange.robotMaterialOrange'");
+		_discMeshInner  = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/disk_inner.disk_inner'");
+		_discMeshOuter  = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/disk_outer.disk_outer'");
+		_blueMaterial   = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
+		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
 	}
 }
 
@@ -34,8 +34,8 @@ void ADiscActor::Tick(float DeltaTime)
 
 	_discInnerActor->SetActorLocation(_discPosition);
 	_discOuterActor->SetActorLocation(_discPosition);
-	_discInnerActor->SetActorRotation(_discRotation * FQuat(FVector::ForwardVector, PI / 2));
-	_discOuterActor->SetActorRotation(_discRotation * FQuat(FVector::ForwardVector, PI / 2));
+	_discInnerActor->SetActorRotation(_discRotation);
+	_discOuterActor->SetActorRotation(_discRotation);
 }
 
 void ADiscActor::Init(PlayerFaction faction)

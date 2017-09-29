@@ -23,10 +23,10 @@ APlayerActor::APlayerActor()
 
 	if (!_torsoMesh) {
 		_torsoMesh      = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/robot_torso.robot_torso'");
-		_headMesh       = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/Orange/robot_head.robot_head'");
-		_armMesh        = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/Orange/robot_arm.robot_arm'");
-		_blueMaterial   = getContent<UMaterial>("Material'/Game/Geometry/Meshes/blue/robotMaterialBlue.robotMaterialBlue'");
-		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/orange/robotMaterialOrange.robotMaterialOrange'");
+		_headMesh       = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/robot_head.robot_head'");
+		_armMesh        = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/robot_arm.robot_arm'");
+		_blueMaterial   = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
+		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
 	}
 }
 
@@ -164,17 +164,17 @@ void APlayerActor::updatePositions()
 
 		torsoTransform.SetLocation(_torsoPosition);
 		FVector headEulerAxisRotation = _headRotation.Euler();
-		torsoTransform.SetRotation(FQuat(FVector(0.0, 0.0, 1.0), FMath::DegreesToRadians(headEulerAxisRotation.Z)) * FQuat(FVector(0.0, 1.0, 0.0), -PI / 2) * FQuat(FVector(0.0, 0.0, 1.0), PI / 2));
+		torsoTransform.SetRotation(FQuat(FVector(0.0, 0.0, 1.0), FMath::DegreesToRadians(headEulerAxisRotation.Z)));
 
 		headTransform.SetLocation(_headPosition);
-		headTransform.SetRotation(_headRotation * FQuat(FVector(0.0,1.0,0.0), -PI / 2) * FQuat(FVector(0.0, 0.0, 1.0), PI / 2));
+		headTransform.SetRotation(_headRotation);
 
 		FVector diskArmForward = _diskArmRotation.RotateVector(FVector(-1.0, 0.0, 0.0));
 		FVector shieldArmForward = _shieldArmRotation.RotateVector(FVector(-1.0, 0.0, 0.0));
 		diskArmTransform.SetLocation(_diskArmPosition - diskArmForward * 7.5);
-		diskArmTransform.SetRotation(_diskArmRotation * FQuat(FVector(0.0, 1.0, 0.0), -PI / 2) * FQuat(FVector(0.0, 0.0, 1.0), PI / 2));
+		diskArmTransform.SetRotation(_diskArmRotation);
 		shieldArmTransform.SetLocation(_shieldArmPosition - shieldArmForward * 7.5);
-		shieldArmTransform.SetRotation(_shieldArmRotation * FQuat(FVector(0.0, 1.0, 0.0), -PI / 2) * FQuat(FVector(0.0, 0.0, 1.0), PI / 2));
+		shieldArmTransform.SetRotation(_shieldArmRotation);
 
 		_torsoActor->SetActorTransform(torsoTransform);
 		_headActor->SetActorTransform(headTransform);
