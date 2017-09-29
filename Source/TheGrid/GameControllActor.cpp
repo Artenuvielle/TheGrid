@@ -201,7 +201,6 @@ void AGameControllActor::updateTrigger(float value)
 		value = _simTriggerPush;
 	}
 #endif
-	std::cout << value << std::endl;
 	if (value > 0.6) {
 		if (_userActor->getDiscActor()->getState() == DISK_STATE_READY) {
 			_userActor->getDiscActor()->startDraw(_userActor->getDiscActor()->getDiscPosition());
