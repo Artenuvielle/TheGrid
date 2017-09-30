@@ -50,6 +50,10 @@ void ADiscActor::Init(PlayerFaction faction)
 
 void ADiscActor::setDiscPosition(FVector pos)
 {
+	if (_state == DISK_STATE_DRAWN) {
+		_momentum = 0.9f * _momentum + (pos - _lastPositionWhileDrawn);
+		_lastPositionWhileDrawn = pos;
+	}
 	_discPosition = pos;
 }
 

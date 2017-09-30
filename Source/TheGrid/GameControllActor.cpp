@@ -88,6 +88,8 @@ void AGameControllActor::BeginPlay()
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_userActor->Init(userFaction, false);
 	_enemyActor->Init(enemyFaction, true);
+	_userActor->getDiscActor()->attach(this);
+	_enemyActor->getDiscActor()->attach(this);
 
 	APawn* userPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	TArray<UCameraComponent*> cameras;
@@ -308,14 +310,12 @@ void AGameControllActor::handleGameStateBroadcast(GameInformation information)
 		UE_LOG(LogTemp, Display, TEXT("game starting"));
 		_gameRunning = true;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("handleGameStateBroadcast"));
 }
 
 void AGameControllActor::handlePlayerIdentification(PlayerInformation information)
 {
 	_userId = information.player_id();
 	_setFaction = information.faction_id() == 0 ? userFaction : enemyFaction;
-	UE_LOG(LogTemp, Warning, TEXT("handlePlayerIdentification"));
 }
 
 void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition information)
@@ -369,7 +369,6 @@ void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation informa
 			_enemyActor->getDiscActor()->catchDisk();
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("handleDiskStatusBroadcast"));
 }
 
 void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation information)
@@ -377,7 +376,6 @@ void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation informati
 	if (information.player_id() != _userId) {
 		_enemyActor->getDiscActor()->forceThrow(createVector(information.disk_pos()), createVector(information.disk_momentum()));
 	}
-	UE_LOG(LogTemp, Warning, TEXT("handleDiskThrowBroadcast"));
 }
 
 void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
