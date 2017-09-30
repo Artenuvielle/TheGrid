@@ -38,7 +38,7 @@ void APlayerActor::BeginPlay()
 
 void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 {
-	ownFaction = faction;
+	_ownFaction = faction;
 
 	_discActor = GetWorld()->SpawnActor<ADiscActor>(ADiscActor::StaticClass());
 	_discActor->Init(faction);
@@ -64,12 +64,12 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 
 void APlayerActor::setFaction(PlayerFaction faction)
 {
-	ownFaction = faction;
+	_ownFaction = faction;
 }
 
 PlayerFaction APlayerActor::getFaction()
 {
-	return ownFaction;
+	return _ownFaction;
 }
 
 void APlayerActor::setHeadPosition(FVector pos)

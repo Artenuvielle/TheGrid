@@ -41,7 +41,7 @@ public:
 
 private:
 	void updatePositions();
-	PlayerFaction ownFaction;
+	PlayerFaction _ownFaction;
 
 	FVector _headPosition;
 	FQuat _headRotation;

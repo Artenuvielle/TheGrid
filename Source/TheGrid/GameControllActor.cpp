@@ -32,7 +32,7 @@ FVector createVector(PositionPacketType position) {
 }
 
 FQuat createQuat(OrientationPacketType orientation) {
-	return FQuat(-orientation.z(), orientation.x(), orientation.y(), orientation.w());
+	return FQuat(-orientation.z(), orientation.x(), orientation.y(), -orientation.w());
 }
 
 PositionPacketType createPosition(FVector pos) {
@@ -48,7 +48,7 @@ OrientationPacketType createOrientation(FQuat rot) {
 	ret.set_x(rot.Y);
 	ret.set_y(rot.Z);
 	ret.set_z(-rot.X);
-	ret.set_w(rot.W);
+	ret.set_w(-rot.W);
 	return ret;
 }
 
