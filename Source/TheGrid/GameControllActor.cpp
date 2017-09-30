@@ -90,6 +90,8 @@ void AGameControllActor::BeginPlay()
 	_enemyActor->Init(enemyFaction, true);
 	_userActor->getDiskActor()->attach(this);
 	_enemyActor->getDiskActor()->attach(this);
+	_userActor->getShieldActor()->setEnemyDisk(_enemyActor->getDiskActor());
+	_enemyActor->getShieldActor()->setEnemyDisk(_userActor->getDiskActor());
 
 	APawn* userPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	TArray<UCameraComponent*> cameras;
@@ -205,12 +207,12 @@ void AGameControllActor::updateTrigger(float value)
 #endif
 	if (value > 0.6) {
 		if (_userActor->getDiskActor()->getState() == DISK_STATE_READY) {
-			_userActor->getDiskActor()->startDraw(_userActor->getDiskActor()->getDiskPosition());
+			_userActor->getDiskActor()->startDraw(_userActor->getDiskActor()->getPosition());
 		}
 	}
 	else if (value < 0.4) {
 		if (_userActor->getDiskActor()->getState() == DISK_STATE_DRAWN) {
-			_userActor->getDiskActor()->endDraw(_userActor->getDiskActor()->getDiskPosition());
+			_userActor->getDiskActor()->endDraw(_userActor->getDiskActor()->getPosition());
 		}
 	}
 #ifdef _logFrames_
@@ -226,8 +228,8 @@ bool AGameControllActor::observableUpdate(GameNotifications notification, Observ
 			DiskThrowInformation* dti = new DiskThrowInformation();
 			dti->set_player_id(_userId);
 			dti->set_faction_id(userFaction);
-			PositionPacketType disk_pos = createPosition(_userActor->getDiskActor()->getDiskPosition());
-			PositionPacketType disk_momentum = createPosition(_userActor->getDiskActor()->getDiskMomentum());
+			PositionPacketType disk_pos = createPosition(_userActor->getDiskActor()->getPosition());
+			PositionPacketType disk_momentum = createPosition(_userActor->getDiskActor()->getMomentum());
 			dti->set_allocated_disk_pos(&disk_pos);
 			dti->set_allocated_disk_momentum(&disk_momentum);
 			ProtobufMessagePacket* packet = new ProtobufMessagePacket();
@@ -382,14 +384,14 @@ void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 {
 	if (information.player_id() == _userId) {
 		if (_userActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY || _userActor->getDiskActor()->getState() == DISK_STATE_RETURNING) {
-			_userActor->getDiskActor()->setDiskPosition(createVector(information.disk_pos()));
-			_userActor->getDiskActor()->setDiskRotation(createQuat(information.disk_rot()));
+			_userActor->getDiskActor()->setPosition(createVector(information.disk_pos()));
+			_userActor->getDiskActor()->setRotation(createQuat(information.disk_rot()));
 		}
 	}
 	else {
 		if (_enemyActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY || _enemyActor->getDiskActor()->getState() == DISK_STATE_RETURNING) {
-			_enemyActor->getDiskActor()->setDiskPosition(createVector(information.disk_pos()));
-			_enemyActor->getDiskActor()->setDiskRotation(createQuat(information.disk_rot()));
+			_enemyActor->getDiskActor()->setPosition(createVector(information.disk_pos()));
+			_enemyActor->getDiskActor()->setRotation(createQuat(information.disk_rot()));
 		}
 	}
 }

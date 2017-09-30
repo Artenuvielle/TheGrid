@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MovementPredictingMeshActor.h"
 #include "DiskActor.h"
+#include "ShieldActor.h"
 #include "common.h"
 #include "PlayerActor.generated.h"
 
@@ -35,6 +36,7 @@ public:
 	FVector getShieldArmPosition();
 	FQuat getShieldArmRotation();
 	ADiskActor* getDiskActor();
+	AShieldActor* getShieldActor();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
@@ -53,6 +55,7 @@ private:
 	FQuat _torsoRotation;
 
 	ADiskActor* _diskActor;
+	AShieldActor* _shieldActor;
 	AStaticMeshActor* _torsoActor;
 	AStaticMeshActor* _headActor;
 	AStaticMeshActor* _diskArmActor;

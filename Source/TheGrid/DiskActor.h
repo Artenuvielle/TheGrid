@@ -27,11 +27,11 @@ public:
 	virtual void BeginPlay() override;
 	void Init(PlayerFaction);
 
-	void setDiskPosition(FVector);
-	void setDiskRotation(FQuat);
-	FVector getDiskPosition();
-	FVector getDiskMomentum();
-	FQuat getDiskRotation();
+	void setPosition(FVector);
+	void setRotation(FQuat);
+	FVector getPosition();
+	FVector getMomentum();
+	FQuat getRotation();
 	DiskState getState();
 
 	bool startDraw(FVector pos);

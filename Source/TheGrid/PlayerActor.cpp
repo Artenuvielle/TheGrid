@@ -42,6 +42,8 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 
 	_diskActor = GetWorld()->SpawnActor<ADiskActor>(ADiskActor::StaticClass());
 	_diskActor->Init(faction);
+	_shieldActor = GetWorld()->SpawnActor<AShieldActor>(AShieldActor::StaticClass());
+	_shieldActor->Init(faction);
 
 	if (drawModel)
 	{
@@ -137,6 +139,11 @@ ADiskActor * APlayerActor::getDiskActor()
 	return _diskActor;
 }
 
+AShieldActor * APlayerActor::getShieldActor()
+{
+	return _shieldActor;
+}
+
 void APlayerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -145,10 +152,12 @@ void APlayerActor::Tick(float DeltaTime)
 
 	if (_diskActor->getState() == DISK_STATE_READY || _diskActor->getState() == DISK_STATE_DRAWN) {
 		FVector discArmUp   = _diskArmRotation.RotateVector(FVector::UpVector);
-		FVector shieldArmUp = _shieldArmRotation.RotateVector(FVector::UpVector);
-		_diskActor->setDiskPosition(_diskArmPosition + discArmUp * 6.5);
-		_diskActor->setDiskRotation(_diskArmRotation);
+		_diskActor->setPosition(_diskArmPosition + discArmUp * 6.5);
+		_diskActor->setRotation(_diskArmRotation);
 	}
+	FVector shieldArmUp = _shieldArmRotation.RotateVector(FVector::UpVector);
+	_shieldActor->setPosition(_shieldArmPosition + shieldArmUp * 6.5);
+	_shieldActor->setRotation(_shieldArmRotation);
 }
 
 void APlayerActor::updatePositions()

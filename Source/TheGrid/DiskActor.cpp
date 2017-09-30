@@ -41,7 +41,7 @@ void ADiskActor::Init(PlayerFaction faction)
 	_diskMeshActor->GetStaticMeshComponent()->SetMaterial(0, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
 }
 
-void ADiskActor::setDiskPosition(FVector pos)
+void ADiskActor::setPosition(FVector pos)
 {
 	if (_state == DISK_STATE_DRAWN) {
 		_momentum = 0.9f * _momentum + (pos - _lastPositionWhileDrawn);
@@ -50,22 +50,22 @@ void ADiskActor::setDiskPosition(FVector pos)
 	_diskPosition = pos;
 }
 
-void ADiskActor::setDiskRotation(FQuat rot)
+void ADiskActor::setRotation(FQuat rot)
 {
 	_diskRotation = rot;
 }
 
-FVector ADiskActor::getDiskPosition()
+FVector ADiskActor::getPosition()
 {
 	return _diskPosition;
 }
 
-FVector ADiskActor::getDiskMomentum()
+FVector ADiskActor::getMomentum()
 {
 	return _momentum;
 }
 
-FQuat ADiskActor::getDiskRotation()
+FQuat ADiskActor::getRotation()
 {
 	return _diskRotation;
 }
