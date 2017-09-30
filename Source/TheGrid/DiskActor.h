@@ -7,7 +7,7 @@
 #include "MovementPredictingMeshActor.h"
 #include "common.h"
 #include "Observer.h"
-#include "DiscActor.generated.h"
+#include "DiskActor.generated.h"
 
 enum DiskState {
 	DISK_STATE_READY = 0,
@@ -17,21 +17,21 @@ enum DiskState {
 };
 
 UCLASS()
-class THEGRID_API ADiscActor : public AActor, public Observable<GameNotifications>
+class THEGRID_API ADiskActor : public AActor, public Observable<GameNotifications>
 {
 	GENERATED_BODY()
 	
 public:	
-	ADiscActor();
+	ADiskActor();
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 	void Init(PlayerFaction);
 
-	void setDiscPosition(FVector);
-	void setDiscRotation(FQuat);
-	FVector getDiscPosition();
-	FVector getDiscMomentum();
-	FQuat getDiscRotation();
+	void setDiskPosition(FVector);
+	void setDiskRotation(FQuat);
+	FVector getDiskPosition();
+	FVector getDiskMomentum();
+	FQuat getDiskRotation();
 	DiskState getState();
 
 	bool startDraw(FVector pos);
@@ -40,16 +40,14 @@ public:
 	bool forceThrow(FVector pos, FVector momentum);
 	bool catchDisk();
 private:
-	FVector _discPosition;
-	FQuat _discRotation;
+	FVector _diskPosition;
+	FQuat _diskRotation;
 	DiskState _state;
 	FVector _momentum;
 	FVector _lastPositionWhileDrawn;
 
-	AStaticMeshActor* _discInnerActor;
-	AStaticMeshActor* _discOuterActor;
-	static UStaticMesh* _discMeshInner;
-	static UStaticMesh* _discMeshOuter;
+	AStaticMeshActor* _diskMeshActor;
+	static UStaticMesh* _diskMesh;
 	static UMaterial* _blueMaterial;
 	static UMaterial* _orangeMaterial;	
 };

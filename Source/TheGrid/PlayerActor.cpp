@@ -40,8 +40,8 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 {
 	_ownFaction = faction;
 
-	_discActor = GetWorld()->SpawnActor<ADiscActor>(ADiscActor::StaticClass());
-	_discActor->Init(faction);
+	_diskActor = GetWorld()->SpawnActor<ADiskActor>(ADiskActor::StaticClass());
+	_diskActor->Init(faction);
 
 	if (drawModel)
 	{
@@ -132,9 +132,9 @@ FQuat APlayerActor::getShieldArmRotation()
 	return _shieldArmRotation;
 }
 
-ADiscActor * APlayerActor::getDiscActor()
+ADiskActor * APlayerActor::getDiskActor()
 {
-	return _discActor;
+	return _diskActor;
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -143,11 +143,11 @@ void APlayerActor::Tick(float DeltaTime)
 
 	updatePositions();
 
-	if (_discActor->getState() == DISK_STATE_READY || _discActor->getState() == DISK_STATE_DRAWN) {
+	if (_diskActor->getState() == DISK_STATE_READY || _diskActor->getState() == DISK_STATE_DRAWN) {
 		FVector discArmUp   = _diskArmRotation.RotateVector(FVector::UpVector);
 		FVector shieldArmUp = _shieldArmRotation.RotateVector(FVector::UpVector);
-		_discActor->setDiscPosition(_diskArmPosition + discArmUp * 6.5);
-		_discActor->setDiscRotation(_diskArmRotation);
+		_diskActor->setDiskPosition(_diskArmPosition + discArmUp * 6.5);
+		_diskActor->setDiskRotation(_diskArmRotation);
 	}
 }
 
