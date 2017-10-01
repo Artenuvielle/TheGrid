@@ -23,7 +23,7 @@ AShieldActor::AShieldActor()
 		_blueMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
 		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
 		_blueMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue_opaque.robot_material_blue_opaque'");
-		_orangeMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange_opaque'.robot_material_orange_opaque''");
+		_orangeMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange_opaque.robot_material_orange_opaque'");
 	}
 }
 

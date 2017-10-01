@@ -7,14 +7,9 @@
 #include "MovementPredictingMeshActor.h"
 #include "common.h"
 #include "Observer.h"
+#include "NetworkPackets.h"
 #include "DiskActor.generated.h"
 
-enum DiskState {
-	DISK_STATE_READY = 0,
-	DISK_STATE_DRAWN,
-	DISK_STATE_FREE_FLY,
-	DISK_STATE_RETURNING
-};
 
 UCLASS()
 class THEGRID_API ADiskActor : public AActor, public Observable<GameNotifications>

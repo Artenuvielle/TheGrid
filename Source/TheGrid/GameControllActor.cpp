@@ -180,7 +180,7 @@ void AGameControllActor::sendPositionInformation()
 	pp->set_allocated_off_hand_pos(&off_hand_pos);
 	pp->set_allocated_off_hand_rot(&off_hand_rot);
 	ProtobufMessagePacket* packet = new ProtobufMessagePacket();
-	packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION);
+	packet->set_header(CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION);
 	packet->set_allocated_player_position(pp);
 	_networkWorker->getClient()->sendPacket(packet);
 }
@@ -192,7 +192,7 @@ void AGameControllActor::requestGameStart()
 		GameInformation* gi = new GameInformation();
 		gi->set_is_running(true);
 		ProtobufMessagePacket* packet = new ProtobufMessagePacket();
-		packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_START_GAME_REQUEST);
+		packet->set_header(CTOS_PACKET_TYPE_START_GAME_REQUEST);
 		packet->set_allocated_game_information(gi);
 		_networkWorker->getClient()->sendPacket(packet, true);
 	}
@@ -233,7 +233,7 @@ bool AGameControllActor::observableUpdate(GameNotifications notification, Observ
 			dti->set_allocated_disk_pos(&disk_pos);
 			dti->set_allocated_disk_momentum(&disk_momentum);
 			ProtobufMessagePacket* packet = new ProtobufMessagePacket();
-			packet->set_header(ProtobufMessagePacket_Header_CTOS_PACKET_TYPE_PLAYER_THROW_INFORMATION);
+			packet->set_header(CTOS_PACKET_TYPE_PLAYER_THROW_INFORMATION);
 			packet->set_allocated_disk_throw_information(dti);
 			_networkWorker->getClient()->sendPacket(packet, true);
 		}
@@ -279,28 +279,28 @@ void AGameControllActor::switchLoggingOnOff()
 void AGameControllActor::handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet)
 {
 	switch (packet->header()) {
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_GAME_STATE_BROADCAST:
+	case STOC_PACKET_TYPE_GAME_STATE_BROADCAST:
 		handleGameStateBroadcast(packet->game_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_IDENTIFICATION:
+	case STOC_PACKET_TYPE_PLAYER_IDENTIFICATION:
 		handlePlayerIdentification(packet->player_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_POSITION_BROADCAST:
+	case STOC_PACKET_TYPE_PLAYER_POSITION_BROADCAST:
 		handlePlayerPositionBroadcast(packet->player_position());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_CHANGED_LIFE_BROADCAST:
+	case STOC_PACKET_TYPE_PLAYER_CHANGED_LIFE_BROADCAST:
 		handlePlayerChangeLifeBroadcast(packet->player_counter_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_PLAYER_CHANGED_SHIELD_CHARGE_BROADCAST:
+	case STOC_PACKET_TYPE_PLAYER_CHANGED_SHIELD_CHARGE_BROADCAST:
 		handlePlayerChangeShieldChargeBroadcast(packet->player_counter_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_STATUS_BROADCAST:
+	case STOC_PACKET_TYPE_DISK_STATUS_BROADCAST:
 		handleDiskStatusBroadcast(packet->disk_status_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_THROW_BROADCAST:
+	case STOC_PACKET_TYPE_DISK_THROW_BROADCAST:
 		handleDiskThrowBroadcast(packet->disk_throw_information());
 		break;
-	case ProtobufMessagePacket_Header_STOC_PACKET_TYPE_DISK_POSITION_BROADCAST:
+	case STOC_PACKET_TYPE_DISK_POSITION_BROADCAST:
 		handleDiskPositionBroadcast(packet->disk_position());
 		break;
 	}
@@ -356,18 +356,18 @@ void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterIn
 void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation information)
 {
 	if (information.player_id() == _userId) {
-		if (information.disk_status_id() == DISK_STATE_RETURNING) {
+		if (information.disk_status() == DISK_STATE_RETURNING) {
 			_userActor->getDiskActor()->forceReturn();
 		}
-		else if(information.disk_status_id() == DISK_STATE_READY) {
+		else if(information.disk_status() == DISK_STATE_READY) {
 			_userActor->getDiskActor()->catchDisk();
 		}
 	}
 	else {
-		if (information.disk_status_id() == DISK_STATE_RETURNING) {
+		if (information.disk_status() == DISK_STATE_RETURNING) {
 			_enemyActor->getDiskActor()->forceReturn();
 		}
-		else if (information.disk_status_id() == DISK_STATE_READY) {
+		else if (information.disk_status() == DISK_STATE_READY) {
 			_enemyActor->getDiskActor()->catchDisk();
 		}
 	}
