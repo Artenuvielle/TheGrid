@@ -345,12 +345,22 @@ void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition informatio
 
 void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation information)
 {
-	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeLifeBroadcast"));
+	if (information.player_id() == _userId) {
+		_userActor->getLifeCounterActor()->setLifeCount(information.counter());
+	}
+	else {
+		_enemyActor->getLifeCounterActor()->setLifeCount(information.counter());
+	}
 }
 
 void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation information)
 {
-	UE_LOG(LogTemp, Warning, TEXT("handlePlayerChangeShieldChargeBroadcast"));
+	if (information.player_id() == _userId) {
+		_userActor->getShieldActor()->setCharges(information.counter());
+	}
+	else {
+		_enemyActor->getShieldActor()->setCharges(information.counter());
+	}
 }
 
 void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation information)

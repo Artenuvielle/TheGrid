@@ -44,6 +44,8 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 	_diskActor->Init(faction);
 	_shieldActor = GetWorld()->SpawnActor<AShieldActor>(AShieldActor::StaticClass());
 	_shieldActor->Init(faction);
+	_lifeCounterActor = GetWorld()->SpawnActor<ALifeCounterActor>(ALifeCounterActor::StaticClass());
+	_lifeCounterActor->Init(faction);
 
 	if (drawModel)
 	{
@@ -142,6 +144,11 @@ ADiskActor * APlayerActor::getDiskActor()
 AShieldActor * APlayerActor::getShieldActor()
 {
 	return _shieldActor;
+}
+
+ALifeCounterActor * APlayerActor::getLifeCounterActor()
+{
+	return _lifeCounterActor;
 }
 
 void APlayerActor::Tick(float DeltaTime)
