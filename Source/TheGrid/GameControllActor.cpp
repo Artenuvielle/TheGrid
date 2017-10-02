@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GameControllActor.h"
-
+#include "WallCollisionActor.h"
 #include <stdlib.h>
 #include "LogStream.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
@@ -303,6 +303,9 @@ void AGameControllActor::handleSToCPacket(unsigned short peerId, ProtobufMessage
 	case STOC_PACKET_TYPE_DISK_POSITION_BROADCAST:
 		handleDiskPositionBroadcast(packet->disk_position());
 		break;
+	case STOC_PACKET_TYPE_WALL_COLLISION_INFORMATION:
+		handleWallCollisonInformation(packet->wall_collision_information());
+		break;
 	}
 }
 
@@ -404,6 +407,12 @@ void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 			_enemyActor->getDiskActor()->setRotation(createQuat(information.disk_rot()));
 		}
 	}
+}
+
+void AGameControllActor::handleWallCollisonInformation(WallCollisonInformation information)
+{
+	AWallCollisionActor* collisionActor = GetWorld()->SpawnActor<AWallCollisionActor>(AWallCollisionActor::StaticClass());
+	collisionActor->Init(information.player_id() == _userId ? userFaction : enemyFaction, createVector(information.collision_pos()), collisionAnimationSize, information.collision_wall());
 }
 
 

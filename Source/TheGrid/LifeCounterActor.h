@@ -15,11 +15,12 @@ class THEGRID_API ALifeCounterActor : public AActor
 	
 public:	
 	ALifeCounterActor();
-	void Init(PlayerFaction type);
+	void Init(PlayerFaction);
 	virtual void Tick(float DeltaTime) override;
 	void setLifeCount(int);
 	int getLifeCount();
 private:
+	PlayerFaction _faction;
 	int _lifeCount;
 	TArray<ULifeDisplayRectComponent*> _rects;
 };

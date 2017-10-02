@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "LifeCounterActor.h"
-
+#include "WallCollisionActor.h"
 
 ALifeCounterActor::ALifeCounterActor()
 {
@@ -12,6 +12,7 @@ ALifeCounterActor::ALifeCounterActor()
 
 void ALifeCounterActor::Init(PlayerFaction faction)
 {
+	_faction = faction;
 	int tileNum = lifeCounterMaxLife * (lifeCounterMaxLife + 1) / 2;
 	float tileSize = 240.f / tileNum;
 	int usedTiles = 0;
@@ -48,7 +49,14 @@ void ALifeCounterActor::Tick(float DeltaTime)
 
 void ALifeCounterActor::setLifeCount(int newCount)
 {
-	_lifeCount = FMath::Max(0, FMath::Min(lifeCounterMaxLife, newCount));
+	int nextCount = FMath::Max(0, FMath::Min(lifeCounterMaxLife, newCount));
+	if (nextCount < _lifeCount) {
+		AWallCollisionActor* collisionActor = GetWorld()->SpawnActor<AWallCollisionActor>(AWallCollisionActor::StaticClass());
+		collisionActor->Init(_faction,
+			FVector::ForwardVector * (_faction == userFaction ? -WALL_BACKWARD_MAX : -WALL_BACKWARD_MIN) + WALL_UP_MID * FVector::UpVector,
+			scoreAnimationSize, (_faction == userFaction ? COLLISION_WALL_BACKWARD : COLLISION_WALL_FORWARD));
+	}
+	_lifeCount = nextCount;
 }
 
 int ALifeCounterActor::getLifeCount()

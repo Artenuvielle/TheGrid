@@ -9,6 +9,7 @@ enum Header {
 	STOC_PACKET_TYPE_DISK_STATUS_BROADCAST = 106;
 	STOC_PACKET_TYPE_DISK_THROW_BROADCAST = 107;
 	STOC_PACKET_TYPE_DISK_POSITION_BROADCAST = 108;
+	STOC_PACKET_TYPE_WALL_COLLISION_INFORMATION = 109;
 	CTOS_PACKET_TYPE_START_GAME_REQUEST = 201;
 	CTOS_PACKET_TYPE_PLAYER_POSITION_INFORMATION = 202;
 	CTOS_PACKET_TYPE_PLAYER_THROW_INFORMATION = 203;
@@ -19,6 +20,15 @@ enum DiskState {
 	DISK_STATE_DRAWN = 2;
 	DISK_STATE_FREE_FLY = 3;
 	DISK_STATE_RETURNING = 4;
+};
+
+enum CollisionWall {
+	COLLISION_WALL_RIGHT = 1;
+	COLLISION_WALL_LEFT = 2;
+	COLLISION_WALL_UP = 3;
+	COLLISION_WALL_DOWN = 4;
+	COLLISION_WALL_BACKWARD = 5;
+	COLLISION_WALL_FORWARD = 6;
 };
 
 
@@ -46,6 +56,7 @@ message ProtobufMessagePacket {
 	optional DiskStatusInformation disk_status_information = 6;
 	optional DiskThrowInformation disk_throw_information = 7;
 	optional DiskPosition disk_position = 8;
+	optional WallCollisonInformation wall_collision_information = 9;
 }
 
 message PlayerInformation {
@@ -93,4 +104,11 @@ message DiskPosition {
 	required int32 faction_id = 2;
 	required PositionPacketType disk_pos = 3;
 	required OrientationPacketType disk_rot = 4;
-}
+};
+
+message WallCollisonInformation {
+	required int32 player_id = 1;
+	required int32 faction_id = 2;
+	required PositionPacketType collision_pos = 3;
+	required CollisionWall collision_wall = 4;
+};

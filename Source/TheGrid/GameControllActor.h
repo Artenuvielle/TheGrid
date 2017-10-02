@@ -57,6 +57,7 @@ private:
 	void handleDiskStatusBroadcast(DiskStatusInformation information);
 	void handleDiskThrowBroadcast(DiskThrowInformation information);
 	void handleDiskPositionBroadcast(DiskPosition information);
+	void handleWallCollisonInformation(WallCollisonInformation information);
 
 #ifdef _simulate_
 	float _simulateStartTime;

@@ -12,17 +12,17 @@ enum PlayerFaction {
 const PlayerFaction userFaction = PLAYER_FACTION_BLUE;
 const PlayerFaction enemyFaction = (userFaction == PLAYER_FACTION_BLUE ? PLAYER_FACTION_ORANGE : PLAYER_FACTION_BLUE);
 
-const float WALL_X_MAX = 135;
-const float WALL_X_MIN = -135;
-const float WALL_Y_MAX = 270;
-const float WALL_Y_MIN = 0;
-const float WALL_Z_MAX = 135;
-const float WALL_Z_MIN = -945;
+const float WALL_RIGHT_MAX = 135;
+const float WALL_RIGHT_MIN = -135;
+const float WALL_UP_MAX = 270;
+const float WALL_UP_MIN = 0;
+const float WALL_BACKWARD_MAX = 135;
+const float WALL_BACKWARD_MIN = -945;
 
-const float WALL_X_MID = (WALL_X_MAX + WALL_X_MIN) / 2;
-const float WALL_Y_MID = (WALL_Y_MAX + WALL_Y_MIN) / 2;
-const float WALL_Z_MID = (WALL_Z_MAX + WALL_Z_MIN) / 2;
-const float WALL_Z_DIFF = WALL_Z_MAX - WALL_Z_MIN;
+const float WALL_RIGHT_MID = (WALL_RIGHT_MAX + WALL_RIGHT_MIN) / 2;
+const float WALL_UP_MID = (WALL_UP_MAX + WALL_UP_MIN) / 2;
+const float WALL_BACKWARD_MID = (WALL_BACKWARD_MAX + WALL_BACKWARD_MIN) / 2;
+const float WALL_BACKWARD_DIFF = WALL_BACKWARD_MAX - WALL_BACKWARD_MIN;
 
 const float PLAYER_HEAD_SIZE = 15;
 const float PLAYER_TORSO_HEAD_OFFSET = 10;
