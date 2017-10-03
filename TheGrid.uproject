@@ -8,9 +8,10 @@
 			"Name": "TheGrid",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
+      "AdditionalDependencies": [
+        "Engine",
+        "ProceduralMeshComponent"
+      ]
 		}
 	],
 	"TargetPlatforms": [

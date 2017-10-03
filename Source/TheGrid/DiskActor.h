@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "MovementPredictingMeshActor.h"
+#include "LightTrailActor.h"
 #include "common.h"
 #include "Observer.h"
 #include "NetworkPackets.h"
@@ -28,6 +29,8 @@ public:
 	FVector getMomentum();
 	FQuat getRotation();
 	DiskState getState();
+	ALightTrailActor* getRightTrailActor();
+	ALightTrailActor* getLeftTrailActor();
 
 	bool startDraw(FVector pos);
 	bool endDraw(FVector pos);
@@ -35,11 +38,14 @@ public:
 	bool forceThrow(FVector pos, FVector momentum);
 	bool catchDisk();
 private:
+	PlayerFaction _faction;
 	FVector _diskPosition;
 	FQuat _diskRotation;
 	DiskState _state;
 	FVector _momentum;
 	FVector _lastPositionWhileDrawn;
+	ALightTrailActor* _rightTrailActor;
+	ALightTrailActor* _leftTrailActor;
 
 	AStaticMeshActor* _diskMeshActor;
 	static UStaticMesh* _diskMesh;

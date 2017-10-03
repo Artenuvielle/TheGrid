@@ -20,7 +20,6 @@ AWallCollisionActor::AWallCollisionActor()
 
 void AWallCollisionActor::Init(PlayerFaction faction, FVector pos, float size, CollisionWall collisionWall)
 {
-	UE_LOG(LogTemp, Log, TEXT("creating collision at %s, size %f, wall %d"), *pos.ToString(), size, (int)collisionWall);
 	switch (collisionWall)
 	{
 	case COLLISION_WALL_RIGHT:

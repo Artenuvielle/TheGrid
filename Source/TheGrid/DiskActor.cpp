@@ -36,6 +36,11 @@ void ADiskActor::Tick(float DeltaTime)
 
 void ADiskActor::Init(PlayerFaction faction)
 {
+	_faction = faction;
+
+	_rightTrailActor = GetWorld()->SpawnActor<ALightTrailActor>(ALightTrailActor::StaticClass());
+	_leftTrailActor = GetWorld()->SpawnActor<ALightTrailActor>(ALightTrailActor::StaticClass());
+
 	_diskMeshActor = spawnMeshActor(GetWorld(), _diskMesh);
 	_diskMeshActor->SetActorScale3D(FVector(diskRadius, diskRadius, diskHeight * 10 / 2));
 	_diskMeshActor->GetStaticMeshComponent()->SetMaterial(0, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
@@ -46,6 +51,11 @@ void ADiskActor::setPosition(FVector pos)
 	if (_state == DISK_STATE_DRAWN) {
 		_momentum = 0.9f * _momentum + (pos - _lastPositionWhileDrawn);
 		_lastPositionWhileDrawn = pos;
+	}
+	else if (_state == DISK_STATE_FREE_FLY || _state == DISK_STATE_RETURNING) {
+		FVector diskOffset = _diskRotation.RotateVector(FVector::RightVector * (diskRadius - 1));
+		_rightTrailActor->addPoint(_diskPosition + diskOffset);
+		_leftTrailActor->addPoint(_diskPosition - diskOffset);
 	}
 	_diskPosition = pos;
 }
@@ -75,6 +85,16 @@ DiskState ADiskActor::getState()
 	return _state;
 }
 
+ALightTrailActor * ADiskActor::getRightTrailActor()
+{
+	return _rightTrailActor;
+}
+
+ALightTrailActor * ADiskActor::getLeftTrailActor()
+{
+	return _leftTrailActor;
+}
+
 bool ADiskActor::startDraw(FVector position) {
 	if (_state == DISK_STATE_READY) {
 		_lastPositionWhileDrawn = position;
@@ -88,6 +108,9 @@ bool ADiskActor::startDraw(FVector position) {
 
 bool ADiskActor::endDraw(FVector position) {
 	if (_state == DISK_STATE_DRAWN) {
+		FVector diskOffset = _diskRotation.RotateVector(FVector::RightVector * (diskRadius - 1));
+		_rightTrailActor->Init(_faction, position + diskOffset);
+		_leftTrailActor->Init(_faction, position - diskOffset);
 		_state = DISK_STATE_FREE_FLY;
 		_momentum.Normalize();
 		UE_LOG(LogTemp, Display, TEXT("finished drawing a disk... LET IF FLYYYYYY"));
@@ -118,6 +141,10 @@ bool ADiskActor::forceThrow(FVector position, FVector mom) {
 bool ADiskActor::catchDisk()
 {
 	if (_state == DISK_STATE_RETURNING) {
+		_rightTrailActor->endTrail();
+		_leftTrailActor->endTrail();
+		_rightTrailActor = GetWorld()->SpawnActor<ALightTrailActor>(ALightTrailActor::StaticClass());
+		_leftTrailActor = GetWorld()->SpawnActor<ALightTrailActor>(ALightTrailActor::StaticClass());
 		_state = DISK_STATE_READY;
 		return true;
 	}
