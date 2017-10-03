@@ -57,19 +57,17 @@ void ALightTrailActor::Tick(float DeltaTime)
 			_normals[i * 3 + 1] = n;
 			_normals[i * 3 + 2] = n;
 
-			_tangents[i * 3] = FProcMeshTangent(/*direction, false*/);
-			_tangents[i * 3 + 1] = FProcMeshTangent(/*direction, false*/);
-			_tangents[i * 3 + 2] = FProcMeshTangent(/*direction, false*/);
+			_tangents[i * 3] = FProcMeshTangent(direction, false);
+			_tangents[i * 3 + 1] = FProcMeshTangent(direction, false);
+			_tangents[i * 3 + 2] = FProcMeshTangent(direction, false);
 		}
 		_mesh->ClearAllMeshSections();
 		_mesh->CreateMeshSection_LinearColor(0, _vertices, _triangles, _normals, _uvs, _colors, _tangents, false);
-		//_mesh->UpdateMeshSection_LinearColor(0, _vertices, _normals, _uvs, _colors, _tangents);
 	}
 }
 
 void ALightTrailActor::Init(PlayerFaction faction, FVector startPosition)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s"), *startPosition.ToString());
 	_vertices = TArray<FVector>();
 	_normals = TArray<FVector>();
 	_uvs = TArray<FVector2D>();
@@ -80,7 +78,7 @@ void ALightTrailActor::Init(PlayerFaction faction, FVector startPosition)
 	_secondLastPointAdded = startPosition;
 	_timeOfLastPointAdded = _time;
 	for (int i = 0; i < lightTrailMaxPoints; i++) {
-		_points.Add(startPosition /*+ FVector::ForwardVector * -i*/);
+		_points.Add(startPosition);
 	}
 	for (int i = 0; i < lightTrailMaxPoints; i++) {
 		FVector direction;

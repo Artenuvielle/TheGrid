@@ -45,7 +45,6 @@ private:
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
 	PlayerFaction _setFaction;
-	bool _gameRunning;
 	int _userId;
 
 	void sendPositionInformation();

@@ -96,11 +96,11 @@ ALightTrailActor * ADiskActor::getLeftTrailActor()
 }
 
 bool ADiskActor::startDraw(FVector position) {
-	if (_state == DISK_STATE_READY) {
+	if (_state == DISK_STATE_READY && gameRunning) {
 		_lastPositionWhileDrawn = position;
 		_momentum = FVector::ZeroVector;
 		_state = DISK_STATE_DRAWN;
-		UE_LOG(LogTemp, Display, TEXT("started drawing a disk"));
+		UE_LOG(LogTemp, Log, TEXT("started drawing a disk"));
 		return true;
 	}
 	return false;
@@ -113,7 +113,7 @@ bool ADiskActor::endDraw(FVector position) {
 		_leftTrailActor->Init(_faction, position - diskOffset);
 		_state = DISK_STATE_FREE_FLY;
 		_momentum.Normalize();
-		UE_LOG(LogTemp, Display, TEXT("finished drawing a disk... LET IF FLYYYYYY"));
+		UE_LOG(LogTemp, Log, TEXT("finished drawing a disk... LET IF FLYYYYYY"));
 		notify(GAME_NOTIFICATION_DISK_THROWN);
 		return true;
 	}

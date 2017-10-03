@@ -57,7 +57,6 @@ AGameControllActor::AGameControllActor() : Super() {
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	PrimaryActorTick.bCanEverTick = true;
 
-	_gameRunning = false;
 	_userId = -1;
 
 #ifdef _simulate_
@@ -311,9 +310,22 @@ void AGameControllActor::handleSToCPacket(unsigned short peerId, ProtobufMessage
 
 void AGameControllActor::handleGameStateBroadcast(GameInformation information)
 {
-	if (information.is_running() && !_gameRunning) {
-		UE_LOG(LogTemp, Display, TEXT("game starting"));
-		_gameRunning = true;
+	if (information.is_running()) {
+		if (!gameRunning) {
+			UE_LOG(LogTemp, Log, TEXT("game starting"));
+			gameRunning = true;
+		}
+	}
+	else {
+		gameRunning = false;
+		if (information.has_winning_player_id()) {
+			if (information.winning_player_id() == _userId) {
+				UE_LOG(LogTemp, Log, TEXT("user won"));
+			}
+			else {
+				UE_LOG(LogTemp, Log, TEXT("enemy won"));
+			}
+		}
 	}
 }
 
