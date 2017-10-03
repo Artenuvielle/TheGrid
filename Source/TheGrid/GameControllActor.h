@@ -7,6 +7,7 @@
 #include "HAL/Runnable.h"
 #include "GameFramework/Pawn.h"
 #include "PlayerActor.h"
+#include "GameEndingAnimationActor.h"
 #include "Observer.h"
 #include "common.h"
 #include "GameControllActor.generated.h"
@@ -44,6 +45,7 @@ private:
 	USceneComponent* _headComponent, *_diskArmComponent, *_shieldArmComponent;
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
+	AGameEndingAnimationActor* _gameEndingAnimation;
 	PlayerFaction _setFaction;
 	int _userId;
 

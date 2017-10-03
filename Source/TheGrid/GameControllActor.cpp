@@ -57,6 +57,8 @@ AGameControllActor::AGameControllActor() : Super() {
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	PrimaryActorTick.bCanEverTick = true;
 
+	_gameEndingAnimation = nullptr;
+	gameRunning = false;
 	_userId = -1;
 
 #ifdef _simulate_
@@ -312,6 +314,10 @@ void AGameControllActor::handleGameStateBroadcast(GameInformation information)
 {
 	if (information.is_running()) {
 		if (!gameRunning) {
+			if (_gameEndingAnimation) {
+				_gameEndingAnimation->Destroy();
+				_gameEndingAnimation = nullptr;
+			}
 			UE_LOG(LogTemp, Log, TEXT("game starting"));
 			gameRunning = true;
 		}
@@ -319,10 +325,13 @@ void AGameControllActor::handleGameStateBroadcast(GameInformation information)
 	else {
 		gameRunning = false;
 		if (information.has_winning_player_id()) {
+			_gameEndingAnimation = GetWorld()->SpawnActor<AGameEndingAnimationActor>(AGameEndingAnimationActor::StaticClass());
 			if (information.winning_player_id() == _userId) {
+				_gameEndingAnimation->Init(userFaction, true);
 				UE_LOG(LogTemp, Log, TEXT("user won"));
 			}
 			else {
+				_gameEndingAnimation->Init(userFaction, false);
 				UE_LOG(LogTemp, Log, TEXT("enemy won"));
 			}
 		}

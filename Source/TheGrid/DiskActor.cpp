@@ -107,6 +107,9 @@ bool ADiskActor::startDraw(FVector position) {
 }
 
 bool ADiskActor::endDraw(FVector position) {
+	if (!gameRunning && _state == DISK_STATE_DRAWN) {
+		_state = DISK_STATE_READY;
+	}
 	if (_state == DISK_STATE_DRAWN) {
 		FVector diskOffset = _diskRotation.RotateVector(FVector::RightVector * (diskRadius - 1));
 		_rightTrailActor->Init(_faction, position + diskOffset);
