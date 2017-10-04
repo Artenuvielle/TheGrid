@@ -14,9 +14,9 @@ ADiskActor::ADiskActor()
 	_diskRotation = FQuat();
 
 	if (!_diskMesh) {
-		_diskMesh       = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/disk.disk'");
-		_blueMaterial   = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
-		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
+		_diskMesh       = LoadObject<UStaticMesh>(NULL, TEXT("StaticMesh'/Game/Geometry/Meshes/disk.disk'"), NULL, LOAD_None, NULL);
+		_blueMaterial   = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'"), NULL, LOAD_None, NULL);
+		_orangeMaterial = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'"), NULL, LOAD_None, NULL);
 	}
 }
 

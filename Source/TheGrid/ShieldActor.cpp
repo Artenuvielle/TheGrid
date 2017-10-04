@@ -19,11 +19,11 @@ AShieldActor::AShieldActor()
 	_radius = shieldMinimumRadius;
 
 	if (!_shieldMesh) {
-		_shieldMesh = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/shield.shield'");
-		_blueMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
-		_orangeMaterial = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
-		_blueMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue_opaque.robot_material_blue_opaque'");
-		_orangeMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange_opaque.robot_material_orange_opaque'");
+		_shieldMesh           = LoadObject<UStaticMesh>(NULL, TEXT("StaticMesh'/Game/Geometry/Meshes/shield.shield'"), NULL, LOAD_None, NULL);
+		_blueMaterial         = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'"), NULL, LOAD_None, NULL);
+		_orangeMaterial       = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'"), NULL, LOAD_None, NULL);
+		_blueMaterialOpaque   = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_blue_opaque.robot_material_blue_opaque'"), NULL, LOAD_None, NULL);
+		_orangeMaterialOpaque = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_orange_opaque.robot_material_orange_opaque'"), NULL, LOAD_None, NULL);
 	}
 }
 
