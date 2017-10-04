@@ -82,8 +82,50 @@ AGameControllActor::~AGameControllActor()
 void AGameControllActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	_networkWorker = new NetworkWorker("127.0.0.1", 13244);
+	FString configFileName = "config.ini";
+	FString serverConfig = "Server";
+	const char* ip = "127.0.0.1";
+	short port = 13244;
+	if (GConfig) {
+		if (!GConfig->DoesSectionExist(*serverConfig, configFileName)) {
+			GConfig->SetString(*serverConfig, TEXT("Ip"), ANSI_TO_TCHAR(ip), configFileName);
+			GConfig->SetInt(*serverConfig, TEXT("Port"), port, configFileName);
+			GConfig->Flush(false, *serverConfig);
+			UE_LOG(LogTemp, Warning, TEXT("section does not exist"));
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Reading %s"), *configFileName);
+		FString ValueReceived;
+		GConfig->GetString(
+			*serverConfig,
+			TEXT("Ip"),
+			ValueReceived,
+			configFileName
+		);
+		if (ValueReceived != "") {
+			ip = TCHAR_TO_ANSI(*ValueReceived);
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("No ip found in config"));
+		}
+		int32 IntValueReceived = 0;
+		GConfig->GetInt(
+			*serverConfig,
+			TEXT("Port"),
+			IntValueReceived,
+			configFileName
+		);
+		if (IntValueReceived != 0) {
+			port = (short) IntValueReceived;
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("No port found in config"));
+		}
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("No config found. Using default configuration."));
+	}
+	UE_LOG(LogTemp, Log, TEXT("Attempting to connect to %s:%d"), ip, port);
+	_networkWorker = new NetworkWorker(ip, port);
 	//_networkWorker = new NetworkWorker("10.155.39.1", 13244);
 	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
