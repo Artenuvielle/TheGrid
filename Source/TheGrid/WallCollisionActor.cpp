@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "WallCollisionActor.h"
+#include "Kismet/GameplayStatics.h"
 
 UMaterial*   AWallCollisionActor::_blueCollisionMaterial = nullptr;
 UMaterial*   AWallCollisionActor::_orangeCollisionMaterial = nullptr;
@@ -53,7 +54,8 @@ void AWallCollisionActor::Tick(float DeltaTime)
 
 void AWallCollisionActor::createAnimationsAtCollisionPoint(PlayerFaction faction, float size , FVector position, FVector normal, CollisionWall collisionWall)
 {
-	UMaterial* material = (faction == PLAYER_FACTION_BLUE ? _blueCollisionMaterial : _orangeCollisionMaterial);
+	UMaterialInstanceDynamic* material = UMaterialInstanceDynamic::Create(faction == PLAYER_FACTION_BLUE ? _blueCollisionMaterial : _orangeCollisionMaterial, this);
+	material->SetScalarParameterValue(FName("StartTime"), UGameplayStatics::GetRealTimeSeconds(GetWorld()));
 	float distYTop = abs(WALL_RIGHT_MAX - position.Y);
 	float distYBot = abs(WALL_RIGHT_MIN - position.Y);
 	float distZTop = abs(WALL_UP_MAX - position.Z);
