@@ -6,7 +6,6 @@
 #include "LogStream.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 
@@ -86,6 +85,7 @@ void AGameControllActor::BeginPlay()
 	FString serverConfig = "Server";
 	const char* ip = "127.0.0.1";
 	short port = 13244;
+	isSpectating = false;
 	if (GConfig) {
 		if (!GConfig->DoesSectionExist(*serverConfig, configFileName)) {
 			GConfig->SetString(*serverConfig, TEXT("Ip"), ANSI_TO_TCHAR(ip), configFileName);
@@ -139,7 +139,15 @@ void AGameControllActor::BeginPlay()
 	APawn* userPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	TArray<UCameraComponent*> cameras;
 	userPawn->GetComponents<UCameraComponent>(cameras, true);
-	_headComponent = (USceneComponent*)cameras[0];
+	for (int i = 0; i < cameras.Num(); i++) {
+		if (cameras[i]->IsActive()) {
+			_headComponent = (USceneComponent*)cameras[i];
+			_defaultCamera = cameras[i];
+		}
+		else {
+			_spectatorCameraComponent = cameras[i];
+		}
+	}
 	TArray<UMotionControllerComponent*> motionControllers;
 	userPawn->GetComponents<UMotionControllerComponent>(motionControllers, true);
 	for (int i = 0; i < motionControllers.Num(); i++) {
@@ -207,6 +215,9 @@ void AGameControllActor::Tick(float deltaSeconds)
 
 void AGameControllActor::sendPositionInformation()
 {
+	if (isSpectating) {
+		return;
+	}
 	PlayerPosition* pp = new PlayerPosition();
 	pp->set_player_id(_userId);
 	pp->set_faction_id(userFaction);
@@ -384,6 +395,11 @@ void AGameControllActor::handlePlayerIdentification(PlayerInformation informatio
 {
 	_userId = information.player_id();
 	_setFaction = information.faction_id() == 0 ? userFaction : enemyFaction;
+	if (information.is_spectator()) {
+		isSpectating = true;
+		_spectatorCameraComponent->SetActive(true);
+		_defaultCamera->SetActive(false);
+	}
 }
 
 void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition information)

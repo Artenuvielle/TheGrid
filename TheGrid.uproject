@@ -8,10 +8,16 @@
 			"Name": "TheGrid",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-      "AdditionalDependencies": [
-        "Engine",
-        "ProceduralMeshComponent"
-      ]
+			"AdditionalDependencies": [
+				"Engine",
+				"ProceduralMeshComponent"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "OculusRift",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [

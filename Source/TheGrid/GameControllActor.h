@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "HAL/Runnable.h"
 #include "GameFramework/Pawn.h"
+#include "Camera/CameraComponent.h"
 #include "PlayerActor.h"
 #include "GameEndingAnimationActor.h"
 #include "Observer.h"
@@ -47,6 +48,9 @@ private:
 	APlayerActor* _enemyActor;
 	AGameEndingAnimationActor* _gameEndingAnimation;
 	PlayerFaction _setFaction;
+	UCameraComponent* _spectatorCameraComponent;
+	UCameraComponent* _defaultCamera;
+	bool isSpectating;
 	int _userId;
 
 	void sendPositionInformation();
