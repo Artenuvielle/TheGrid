@@ -14,6 +14,7 @@
 #include "GameControllActor.generated.h"
 
 class NetworkWorker;
+class ServerWorker;
 
 UCLASS()
 class THEGRID_API AGameControllActor : public APawn, public Observer<GameNotifications>
@@ -25,10 +26,12 @@ public:
 	AGameControllActor();
 	~AGameControllActor();
 	void BeginPlay();
+	void EndPlay(const EEndPlayReason::Type EndPlayReason);
 	void Tick(float);
 	virtual void handleSToCPacket(unsigned short peerId, ProtobufMessagePacket* packet);
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent);
 	void requestGameStart();
+	void quitToMenu();
 	void updateTrigger(float value);
 	bool observableUpdate(GameNotifications notification, Observable<GameNotifications>* src) override;
 	void observableRevoke(GameNotifications notification, Observable<GameNotifications>* src) override;
@@ -43,6 +46,7 @@ public:
 private:
 	float _time;
 	NetworkWorker* _networkWorker;
+	ServerWorker* _serverWorker;
 	USceneComponent* _headComponent, *_diskArmComponent, *_shieldArmComponent;
 	APlayerActor* _userActor;
 	APlayerActor* _enemyActor;
@@ -108,4 +112,19 @@ private:
 	const char* _host;
 	short _port;
 	bool gameRunnning;
+};
+
+class ServerWorker : public FRunnable
+{
+public:
+	ServerWorker(short);
+	virtual ~ServerWorker();
+
+	virtual bool Init();
+	virtual uint32 Run();
+	virtual void Stop();
+private:
+	short _port;
+	FRunnableThread* _thread;
+	FProcHandle _handle;
 };

@@ -20,6 +20,7 @@ APlayerActor::APlayerActor()
 	_diskArmRotation = FQuat();
 	_shieldArmPosition = FVector();
 	_shieldArmRotation = FQuat();
+	_drawModel = false;
 
 	if (!_torsoMesh) {
 		_torsoMesh      = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/robot_torso.robot_torso'");
@@ -49,21 +50,23 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 
 	if (drawModel)
 	{
-		_torsoActor = spawnMeshActor(GetWorld(), _torsoMesh);
-		_torsoActor->SetActorScale3D(FVector(2.6, 2.6, 2.6));
-		
-		_headActor = spawnMeshActor(GetWorld(), _headMesh);
-		_headActor->SetActorScale3D(FVector(2., 2., 2.));
-		_headActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
-
-		_diskArmActor = spawnMeshActor(GetWorld(), _armMesh);
-		_diskArmActor->SetActorScale3D(FVector(2., 2., 2.));
-		_diskArmActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
-
-		_shieldArmActor = spawnMeshActor(GetWorld(), _armMesh);
-		_shieldArmActor->SetActorScale3D(FVector(2., 2., 2.));
-		_shieldArmActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
+		_drawModel = drawModel;
 	}
+
+	_torsoActor = spawnMeshActor(GetWorld(), _torsoMesh);
+	_torsoActor->SetActorScale3D(FVector(2.6, 2.6, 2.6));
+		
+	_headActor = spawnMeshActor(GetWorld(), _headMesh);
+	_headActor->SetActorScale3D(FVector(2., 2., 2.));
+	_headActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
+
+	_diskArmActor = spawnMeshActor(GetWorld(), _armMesh);
+	_diskArmActor->SetActorScale3D(FVector(2., 2., 2.));
+	_diskArmActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
+
+	_shieldArmActor = spawnMeshActor(GetWorld(), _armMesh);
+	_shieldArmActor->SetActorScale3D(FVector(2., 2., 2.));
+	_shieldArmActor->GetStaticMeshComponent()->SetMaterial(1, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
 }
 
 void APlayerActor::setFaction(PlayerFaction faction)
@@ -104,6 +107,11 @@ void APlayerActor::setShieldArmPosition(FVector pos)
 void APlayerActor::setShieldArmRotation(FQuat rot)
 {
 	_shieldArmRotation = rot;
+}
+
+void APlayerActor::setDrawState(bool drawModel)
+{
+	_drawModel = drawModel;
 }
 
 FVector APlayerActor::getHeadPosition()
@@ -151,6 +159,11 @@ ALifeCounterActor * APlayerActor::getLifeCounterActor()
 	return _lifeCounterActor;
 }
 
+bool APlayerActor::getDrawState()
+{
+	return _drawModel;
+}
+
 void APlayerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -176,7 +189,7 @@ void APlayerActor::updatePositions()
 	FVector headZAxisDirection = _headRotation.RotateVector(FVector::UpVector);
 	_torsoPosition = _headPosition - headZAxisDirection * PLAYER_HEAD_SIZE - FVector(0.0, 0.0, PLAYER_TORSO_HEAD_OFFSET);
 
-	if (_torsoActor) {
+	if (_drawModel) {
 		FTransform torsoTransform = _torsoActor->GetTransform();
 		FTransform headTransform = _headActor->GetTransform();
 		FTransform diskArmTransform = _diskArmActor->GetTransform();
@@ -196,9 +209,30 @@ void APlayerActor::updatePositions()
 		shieldArmTransform.SetLocation(_shieldArmPosition - shieldArmForward * 7.5);
 		shieldArmTransform.SetRotation(_shieldArmRotation);
 
-		_torsoActor->SetActorTransform(torsoTransform);
-		_headActor->SetActorTransform(headTransform);
-		_diskArmActor->SetActorTransform(diskArmTransform);
-		_shieldArmActor->SetActorTransform(shieldArmTransform);
+		if (torsoTransform.IsValid()) {
+			_torsoActor->SetActorTransform(torsoTransform);
+		}
+		if (headTransform.IsValid()) {
+			_headActor->SetActorTransform(headTransform);
+		}
+		if (diskArmTransform.IsValid()) {
+			_diskArmActor->SetActorTransform(diskArmTransform);
+		}
+		if (shieldArmTransform.IsValid()) {
+			_shieldArmActor->SetActorTransform(shieldArmTransform);
+		}
+	} else {
+		if (_torsoActor->GetTransform().IsValid()) {
+			_torsoActor->SetActorLocation(FVector::UpVector * -1000);
+		}
+		if (_headActor->GetTransform().IsValid()) {
+			_headActor->SetActorLocation(FVector::UpVector * -1000);
+		}
+		if (_diskArmActor->GetTransform().IsValid()) {
+			_diskArmActor->SetActorLocation(FVector::UpVector * -1000);
+		}
+		if (_shieldArmActor->GetTransform().IsValid()) {
+			_shieldArmActor->SetActorLocation(FVector::UpVector * -1000);
+		}
 	}
 }

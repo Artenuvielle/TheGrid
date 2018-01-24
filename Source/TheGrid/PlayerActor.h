@@ -29,6 +29,7 @@ public:
 	void setDiskArmRotation(FQuat);
 	void setShieldArmPosition(FVector);
 	void setShieldArmRotation(FQuat);
+	void setDrawState(bool);
 
 	FVector getHeadPosition();
 	FQuat getHeadRotation();
@@ -39,6 +40,7 @@ public:
 	ADiskActor* getDiskActor();
 	AShieldActor* getShieldActor();
 	ALifeCounterActor* getLifeCounterActor();
+	bool getDrawState();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
@@ -56,6 +58,7 @@ private:
 	FVector _torsoPosition;
 	FQuat _torsoRotation;
 
+	bool _drawModel;
 	ADiskActor* _diskActor;
 	AShieldActor* _shieldActor;
 	ALifeCounterActor* _lifeCounterActor;

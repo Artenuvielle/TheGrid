@@ -19,11 +19,11 @@ AShieldActor::AShieldActor()
 	_radius = shieldMinimumRadius;
 
 	if (!_shieldMesh) {
-		_shieldMesh           = LoadObject<UStaticMesh>(NULL, TEXT("StaticMesh'/Game/Geometry/Meshes/shield.shield'"), NULL, LOAD_None, NULL);
-		_blueMaterial         = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'"), NULL, LOAD_None, NULL);
-		_orangeMaterial       = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'"), NULL, LOAD_None, NULL);
-		_blueMaterialOpaque   = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_blue_opaque.robot_material_blue_opaque'"), NULL, LOAD_None, NULL);
-		_orangeMaterialOpaque = LoadObject<UMaterial>(NULL, TEXT("Material'/Game/Geometry/Meshes/robot_material_orange_opaque.robot_material_orange_opaque'"), NULL, LOAD_None, NULL);
+		_shieldMesh           = getContent<UStaticMesh>("StaticMesh'/Game/Geometry/Meshes/shield.shield'");
+		_blueMaterial         = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue.robot_material_blue'");
+		_orangeMaterial       = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange.robot_material_orange'");
+		_blueMaterialOpaque   = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_blue_opaque.robot_material_blue_opaque'");
+		_orangeMaterialOpaque = getContent<UMaterial>("Material'/Game/Geometry/Meshes/robot_material_orange_opaque.robot_material_orange_opaque'");
 	}
 }
 
@@ -39,25 +39,28 @@ void AShieldActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (_enemyDisk) {
-		float distance = FVector::Dist(_enemyDisk->getPosition(), getPosition());
-		if (distance < shieldGrowStartDistance) {
-			if (distance < shieldGrowEndDistance) {
-				_radius = shieldMaximumRadius;
+	if (_shieldMeshActor->GetTransform().IsValid()) {
+		if (_enemyDisk) {
+			float distance = FVector::Dist(_enemyDisk->getPosition(), getPosition());
+			if (distance < shieldGrowStartDistance) {
+				if (distance < shieldGrowEndDistance) {
+					_radius = shieldMaximumRadius;
+				}
+				else {
+					float distanceScale = (1 + cos((distance - shieldGrowEndDistance) / (shieldGrowStartDistance - shieldGrowEndDistance) * PI)) / 2;
+					_radius = shieldMinimumRadius + (shieldMaximumRadius - shieldMinimumRadius) * distanceScale;
+				}
 			}
 			else {
-				float distanceScale = (1 + cos((distance - shieldGrowEndDistance) / (shieldGrowStartDistance - shieldGrowEndDistance) * PI)) / 2;
-				_radius = shieldMinimumRadius + (shieldMaximumRadius - shieldMinimumRadius) * distanceScale;
+				_radius = shieldMinimumRadius;
 			}
 		}
-		else {
-			_radius = shieldMinimumRadius;
-		}
+		float radiusScale = _radius / shieldMaximumRadius;
+
+		_shieldMeshActor->SetActorLocation(_shieldPosition);
+		_shieldMeshActor->SetActorRotation(_shieldRotation);
+		_shieldMeshActor->SetActorScale3D(FVector(radiusScale, radiusScale, 1.0));
 	}
-	float radiusScale = _radius / shieldMaximumRadius;
-	_shieldMeshActor->SetActorLocation(_shieldPosition);
-	_shieldMeshActor->SetActorRotation(_shieldRotation);
-	_shieldMeshActor->SetActorScale3D(FVector(radiusScale, radiusScale, 1.0));
 }
 
 void AShieldActor::setEnemyDisk(ADiskActor* enemyDisk)

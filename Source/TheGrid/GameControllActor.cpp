@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include "LogStream.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
+#include "LevelParameterSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "Runtime/HeadMountedDisplay/Public/HeadMountedDisplay.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 
 #ifdef _simulate_
@@ -19,12 +21,6 @@ std::ofstream logFile;
 #endif
 
 LogStream logStream;
-
-void drawGizmo(UWorld* world, FVector position, FQuat rotation, int length = 15, int width = 2) {
-	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::UpVector), FColor(0, 0, 255), false, 0.1, 0, width);
-	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::RightVector), FColor(0, 255, 0), false, 0.1, 0, width);
-	DrawDebugLine(world, position, position + length * rotation.RotateVector(FVector::ForwardVector), FColor(255, 0, 0), false, 0.1, 0, width);
-}
 
 FVector createVector(PositionPacketType position) {
 	return FVector(-position.z(), position.x(), position.y());
@@ -73,6 +69,9 @@ AGameControllActor::AGameControllActor() : Super() {
 AGameControllActor::~AGameControllActor()
 {
 	delete _networkWorker;
+	if (_serverWorker != nullptr) {
+		delete _serverWorker;
+	}
 #ifdef _logFrames_
 	logFile.close();
 #endif
@@ -86,47 +85,23 @@ void AGameControllActor::BeginPlay()
 	const char* ip = "127.0.0.1";
 	short port = 13244;
 	isSpectating = false;
-	if (GConfig) {
-		if (!GConfig->DoesSectionExist(*serverConfig, configFileName)) {
-			GConfig->SetString(*serverConfig, TEXT("Ip"), ANSI_TO_TCHAR(ip), configFileName);
-			GConfig->SetInt(*serverConfig, TEXT("Port"), port, configFileName);
-			GConfig->Flush(false, *serverConfig);
-			UE_LOG(LogTemp, Warning, TEXT("section does not exist"));
-		}
-		UE_LOG(LogTemp, Warning, TEXT("Reading %s"), *configFileName);
-		FString ValueReceived;
-		GConfig->GetString(
-			*serverConfig,
-			TEXT("Ip"),
-			ValueReceived,
-			configFileName
-		);
-		if (ValueReceived != "") {
-			ip = TCHAR_TO_ANSI(*ValueReceived);
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("No ip found in config"));
-		}
-		int32 IntValueReceived = 0;
-		GConfig->GetInt(
-			*serverConfig,
-			TEXT("Port"),
-			IntValueReceived,
-			configFileName
-		);
-		if (IntValueReceived != 0) {
-			port = (short) IntValueReceived;
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("No port found in config"));
-		}
+	ULevelParameterSaveGame* LoadGameInstance = Cast<ULevelParameterSaveGame>(UGameplayStatics::CreateSaveGameObject(ULevelParameterSaveGame::StaticClass()));
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("levelParameters"), 0)) {
+		LoadGameInstance = Cast<ULevelParameterSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("levelParameters"), 0));
+	}
+	ip = TCHAR_TO_ANSI(*(LoadGameInstance->ip));
+	port = (short) LoadGameInstance->port;
+
+	if (LoadGameInstance->startOwnServer) {
+		_serverWorker = new ServerWorker(port);
 	}
 	else {
-		UE_LOG(LogTemp, Warning, TEXT("No config found. Using default configuration."));
+		_serverWorker = nullptr;
 	}
+
 	UE_LOG(LogTemp, Log, TEXT("Attempting to connect to %s:%d"), ip, port);
 	_networkWorker = new NetworkWorker(ip, port);
-	//_networkWorker = new NetworkWorker("10.155.39.1", 13244);
+
 	_userActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_enemyActor = GetWorld()->SpawnActor<APlayerActor>(APlayerActor::StaticClass());
 	_userActor->Init(userFaction, false);
@@ -160,6 +135,11 @@ void AGameControllActor::BeginPlay()
 	}
 }
 
+void AGameControllActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+}
+
 void AGameControllActor::Tick(float deltaSeconds)
 {
 	_time += deltaSeconds;
@@ -183,15 +163,17 @@ void AGameControllActor::Tick(float deltaSeconds)
 	}
 #endif
 
-	_userActor->setHeadPosition(_headComponent->GetComponentLocation());
-	_userActor->setHeadRotation(FQuat(_headComponent->GetComponentRotation()));
-	_userActor->setDiskArmPosition(_diskArmComponent->GetComponentLocation());
-	_userActor->setDiskArmRotation(FQuat(_diskArmComponent->GetComponentRotation()));
-	_userActor->setShieldArmPosition(_shieldArmComponent->GetComponentLocation());
-	_userActor->setShieldArmRotation(FQuat(_shieldArmComponent->GetComponentRotation()));
+	if (!isSpectating) {
+		_userActor->setHeadPosition(_headComponent->GetComponentLocation());
+		_userActor->setHeadRotation(FQuat(_headComponent->GetComponentRotation()));
+		_userActor->setDiskArmPosition(_diskArmComponent->GetComponentLocation());
+		_userActor->setDiskArmRotation(FQuat(_diskArmComponent->GetComponentRotation()));
+		_userActor->setShieldArmPosition(_shieldArmComponent->GetComponentLocation());
+		_userActor->setShieldArmRotation(FQuat(_shieldArmComponent->GetComponentRotation()));
 
-	if (_userId >= 0) {
-		sendPositionInformation();
+		if (_userId >= 0) {
+			sendPositionInformation();
+		}
 	}
 
 #ifdef _logFrames_
@@ -249,6 +231,13 @@ void AGameControllActor::requestGameStart()
 		packet->set_header(CTOS_PACKET_TYPE_START_GAME_REQUEST);
 		packet->set_allocated_game_information(gi);
 		_networkWorker->getClient()->sendPacket(packet, true);
+	}
+}
+
+void AGameControllActor::quitToMenu()
+{
+	if (!gameRunning) {
+		UGameplayStatics::OpenLevel(GetWorld(), "MainMenuLevel");
 	}
 }
 
@@ -311,9 +300,15 @@ void AGameControllActor::startSimulation()
 void AGameControllActor::SetupPlayerInputComponent(UInputComponent* InputComponent)
 {
 	Super::SetupPlayerInputComponent(InputComponent);
+
+	InputComponent->BindKey(EKeys::Escape, EInputEvent::IE_Pressed, this, &AGameControllActor::quitToMenu);
+
 	InputComponent->BindAction("MenuButtonLeft", EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
+	InputComponent->BindAction("LeftTrigger", EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
 	InputComponent->BindKey(EKeys::G, EInputEvent::IE_Pressed, this, &AGameControllActor::requestGameStart);
+
 	InputComponent->BindAxis("RightTriggerAnalog", this, &AGameControllActor::updateTrigger);
+
 #ifdef _simulate_
 	InputComponent->BindKey(EKeys::X, EInputEvent::IE_Pressed, this, &AGameControllActor::startSimulation);
 #endif
@@ -396,9 +391,14 @@ void AGameControllActor::handlePlayerIdentification(PlayerInformation informatio
 	_userId = information.player_id();
 	_setFaction = information.faction_id() == 0 ? userFaction : enemyFaction;
 	if (information.is_spectator()) {
+		_userActor->setDrawState(true);
 		isSpectating = true;
 		_spectatorCameraComponent->SetActive(true);
 		_defaultCamera->SetActive(false);
+	} else {
+		if (GEngine && GEngine->HMDDevice.Get()) {
+			GEngine->HMDDevice.Get()->EnableHMD(true);
+		}
 	}
 }
 
@@ -416,18 +416,11 @@ void AGameControllActor::handlePlayerPositionBroadcast(PlayerPosition informatio
 	actor->setDiskArmRotation(createQuat(information.main_hand_rot()));
 	actor->setShieldArmPosition(createVector(information.off_hand_pos()));
 	actor->setShieldArmRotation(createQuat(information.off_hand_rot()));
-
-	/*if (UWorld* g = GetWorld())
-	{
-		drawGizmo(GetWorld(), createVector(information.head_pos()), createQuat(information.head_rot()));
-		drawGizmo(GetWorld(), createVector(information.main_hand_pos()), createQuat(information.main_hand_rot()));
-		drawGizmo(GetWorld(), createVector(information.off_hand_pos()), createQuat(information.off_hand_rot()));
-	}*/
 }
 
 void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformation information)
 {
-	if (information.player_id() == _userId) {
+	if (information.faction_id() == _setFaction) {
 		_userActor->getLifeCounterActor()->setLifeCount(information.counter());
 	}
 	else {
@@ -437,7 +430,7 @@ void AGameControllActor::handlePlayerChangeLifeBroadcast(PlayerCounterInformatio
 
 void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterInformation information)
 {
-	if (information.player_id() == _userId) {
+	if (information.faction_id() == _setFaction) {
 		_userActor->getShieldActor()->setCharges(information.counter());
 	}
 	else {
@@ -447,19 +440,56 @@ void AGameControllActor::handlePlayerChangeShieldChargeBroadcast(PlayerCounterIn
 
 void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation information)
 {
-	if (information.player_id() == _userId) {
+	if (information.faction_id() == _setFaction) {
 		if (information.disk_status() == DISK_STATE_RETURNING) {
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_READY) {
+				_userActor->getDiskActor()->startDraw(_userActor->getDiskActor()->getPosition());
+			}
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_DRAWN) {
+				_userActor->getDiskActor()->forceThrow(_userActor->getDiskActor()->getPosition(), FVector::ForwardVector);
+			}
 			_userActor->getDiskActor()->forceReturn();
 		}
 		else if(information.disk_status() == DISK_STATE_READY) {
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_DRAWN) {
+				_userActor->getDiskActor()->forceThrow(_userActor->getDiskActor()->getPosition(), FVector::ForwardVector);
+			}
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY) {
+				_userActor->getDiskActor()->forceReturn();
+			}
 			_userActor->getDiskActor()->catchDisk();
 		}
 	}
 	else {
+		switch (information.disk_status())
+		{
+		case DISK_STATE_READY:
+			UE_LOG(LogTemp, Log, TEXT("DISK_STATE_READY")); break;
+		case DISK_STATE_DRAWN:
+			UE_LOG(LogTemp, Log, TEXT("DISK_STATE_DRAWN")); break;
+		case DISK_STATE_FREE_FLY:
+			UE_LOG(LogTemp, Log, TEXT("DISK_STATE_FREE_FLY")); break;
+		case DISK_STATE_RETURNING:
+			UE_LOG(LogTemp, Log, TEXT("DISK_STATE_RETURNING")); break;
+		default:
+			break;
+		}
 		if (information.disk_status() == DISK_STATE_RETURNING) {
+			if (_enemyActor->getDiskActor()->getState() == DISK_STATE_READY) {
+				_enemyActor->getDiskActor()->startDraw(_enemyActor->getDiskActor()->getPosition());
+			}
+			if (_enemyActor->getDiskActor()->getState() == DISK_STATE_DRAWN) {
+				_enemyActor->getDiskActor()->forceThrow(_enemyActor->getDiskActor()->getPosition(), FVector::ForwardVector);
+			}
 			_enemyActor->getDiskActor()->forceReturn();
 		}
 		else if (information.disk_status() == DISK_STATE_READY) {
+			if (_enemyActor->getDiskActor()->getState() == DISK_STATE_DRAWN) {
+				_enemyActor->getDiskActor()->forceThrow(_enemyActor->getDiskActor()->getPosition(), FVector::ForwardVector);
+			}
+			if (_enemyActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY) {
+				_enemyActor->getDiskActor()->forceReturn();
+			}
 			_enemyActor->getDiskActor()->catchDisk();
 		}
 	}
@@ -467,14 +497,31 @@ void AGameControllActor::handleDiskStatusBroadcast(DiskStatusInformation informa
 
 void AGameControllActor::handleDiskThrowBroadcast(DiskThrowInformation information)
 {
-	if (information.player_id() != _userId) {
+	if (information.faction_id() != _setFaction) {
+		UE_LOG(LogTemp, Log, TEXT("DISK_THROW"));
+		if (_enemyActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY) {
+			_enemyActor->getDiskActor()->forceReturn();
+		}
+		if (_enemyActor->getDiskActor()->getState() == DISK_STATE_RETURNING) {
+			_enemyActor->getDiskActor()->catchDisk();
+		}
 		_enemyActor->getDiskActor()->forceThrow(createVector(information.disk_pos()), createVector(information.disk_momentum()));
+	} else {
+		if (isSpectating) {
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY) {
+				_userActor->getDiskActor()->forceReturn();
+			}
+			if (_userActor->getDiskActor()->getState() == DISK_STATE_RETURNING) {
+				_userActor->getDiskActor()->catchDisk();
+			}
+			_userActor->getDiskActor()->forceThrow(createVector(information.disk_pos()), createVector(information.disk_momentum()));
+		}
 	}
 }
 
 void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 {
-	if (information.player_id() == _userId) {
+	if (information.faction_id() == _setFaction) {
 		if (_userActor->getDiskActor()->getState() == DISK_STATE_FREE_FLY || _userActor->getDiskActor()->getState() == DISK_STATE_RETURNING) {
 			_userActor->getDiskActor()->setPosition(createVector(information.disk_pos()));
 			_userActor->getDiskActor()->setRotation(createQuat(information.disk_rot()));
@@ -491,7 +538,7 @@ void AGameControllActor::handleDiskPositionBroadcast(DiskPosition information)
 void AGameControllActor::handleWallCollisonInformation(WallCollisonInformation information)
 {
 	AWallCollisionActor* collisionActor = GetWorld()->SpawnActor<AWallCollisionActor>(AWallCollisionActor::StaticClass());
-	collisionActor->Init(information.player_id() == _userId ? userFaction : enemyFaction, createVector(information.collision_pos()), collisionAnimationSize, information.collision_wall());
+	collisionActor->Init(information.faction_id() == _setFaction ? userFaction : enemyFaction, createVector(information.collision_pos()), collisionAnimationSize, information.collision_wall());
 }
 
 
@@ -562,7 +609,6 @@ bool NetworkWorker::Init()
 	}
 }
 
-//Run
 uint32 NetworkWorker::Run()
 {
 	FPlatformProcess::Sleep(0.03);
@@ -576,7 +622,39 @@ uint32 NetworkWorker::Run()
 	return 0;
 }
 
-//stop
 void NetworkWorker::Stop()
 {
+}
+
+ServerWorker::ServerWorker(short port)
+	: _port(port)
+{
+	_thread = FRunnableThread::Create(this, TEXT("ServerWorker"));
+	FPlatformProcess::Sleep(0.5);
+}
+
+ServerWorker::~ServerWorker()
+{
+	_thread->Kill();
+	delete _thread;
+}
+
+bool ServerWorker::Init()
+{
+	return true;
+}
+
+uint32 ServerWorker::Run()
+{
+	const FString serverPath = FPaths::ConvertRelativePathToFull(FPaths::GameContentDir()) + "Server/TheGridServer.exe";
+
+	_handle = FPlatformProcess::CreateProc(*serverPath, *FString::FromInt(_port), false, true, false, nullptr, 0, nullptr, nullptr);
+	return 0;
+}
+
+void ServerWorker::Stop()
+{
+	if (FPlatformProcess::IsProcRunning(_handle)) {
+		FPlatformProcess::TerminateProc(_handle, true);
+	}
 }
