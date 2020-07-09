@@ -39,7 +39,7 @@ void AShieldActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (_shieldMeshActor->GetTransform().IsValid()) {
+	if (_shieldMeshActor->GetTransform().IsValid() && !_shieldPosition.ContainsNaN()) {
 		if (_enemyDisk) {
 			float distance = FVector::Dist(_enemyDisk->getPosition(), getPosition());
 			if (distance < shieldGrowStartDistance) {

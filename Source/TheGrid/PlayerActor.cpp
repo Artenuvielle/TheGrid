@@ -55,6 +55,12 @@ void APlayerActor::Init(PlayerFaction faction, bool drawModel)
 
 	_torsoActor = spawnMeshActor(GetWorld(), _torsoMesh);
 	_torsoActor->SetActorScale3D(FVector(2.6, 2.6, 2.6));
+	if (_torsoActor->GetTransform().IsValid()) {
+		UE_LOG(LogTemp, Log, TEXT("torsoActor valid"));
+	}
+	else {
+		UE_LOG(LogTemp, Log, TEXT("torsoActor invalid"));
+	}
 		
 	_headActor = spawnMeshActor(GetWorld(), _headMesh);
 	_headActor->SetActorScale3D(FVector(2., 2., 2.));
@@ -169,6 +175,25 @@ void APlayerActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	updatePositions();
+
+	/*switch (_diskActor->getState())
+	{
+	case DISK_STATE_READY:
+		UE_LOG(LogTemp, Log, TEXT("DISK_STATE_READY"));
+		break;
+	case DISK_STATE_DRAWN:
+		UE_LOG(LogTemp, Log, TEXT("DISK_STATE_DRAWN"));
+		break;
+	case DISK_STATE_FREE_FLY:
+		UE_LOG(LogTemp, Log, TEXT("DISK_STATE_FREE_FLY"));
+		break;
+	case DISK_STATE_RETURNING:
+		UE_LOG(LogTemp, Log, TEXT("DISK_STATE_RETURNING"));
+		break;
+	default:
+		UE_LOG(LogTemp, Log, TEXT("DISK_STATE_NONE"));
+		break;
+	}*/
 
 	if (_diskActor->getState() == DISK_STATE_READY || _diskActor->getState() == DISK_STATE_DRAWN) {
 		FVector discArmUp = _diskArmRotation.RotateVector(FVector::UpVector);

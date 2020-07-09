@@ -30,7 +30,7 @@ void ADiskActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (_diskMeshActor->GetTransform().IsValid()) {
+	if (_diskMeshActor->GetTransform().IsValid() && !_diskPosition.ContainsNaN()) {
 		_diskMeshActor->SetActorLocation(_diskPosition);
 		_diskMeshActor->SetActorRotation(_diskRotation);
 	}
@@ -46,6 +46,13 @@ void ADiskActor::Init(PlayerFaction faction)
 	_diskMeshActor = spawnMeshActor(GetWorld(), _diskMesh);
 	_diskMeshActor->SetActorScale3D(FVector(diskRadius, diskRadius, diskHeight * 10 / 2));
 	_diskMeshActor->GetStaticMeshComponent()->SetMaterial(0, faction == PLAYER_FACTION_BLUE ? _blueMaterial : _orangeMaterial);
+	
+	if (_diskMeshActor->GetTransform().IsValid()) {
+		UE_LOG(LogTemp, Log, TEXT("diskMeshActor valid"));
+	}
+	else {
+		UE_LOG(LogTemp, Log, TEXT("diskMeshActor invalid"));
+	}
 }
 
 void ADiskActor::setPosition(FVector pos)

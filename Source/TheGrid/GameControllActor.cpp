@@ -169,7 +169,7 @@ void AGameControllActor::Tick(float deltaSeconds)
 		_userActor->setDiskArmPosition(_diskArmComponent->GetComponentLocation());
 		_userActor->setDiskArmRotation(FQuat(_diskArmComponent->GetComponentRotation()));
 		_userActor->setShieldArmPosition(_shieldArmComponent->GetComponentLocation());
-		_userActor->setShieldArmRotation(FQuat(_shieldArmComponent->GetComponentRotation()));
+		_userActor->setShieldArmRotation(FQuat(_shieldArmComponent->GetComponentRotation()) * FQuat(FVector(1, 0, 0), PI / 2));
 
 		if (_userId >= 0) {
 			sendPositionInformation();

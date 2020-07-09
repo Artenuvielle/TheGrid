@@ -16,7 +16,19 @@
 	],
 	"Plugins": [
 		{
+			"Name": "SteamController",
+			"Enabled": true
+		},
+		{
+			"Name": "OculusInput",
+			"Enabled": false
+		},
+		{
 			"Name": "OculusRift",
+			"Enabled": false
+		},
+		{
+			"Name": "GearVR",
 			"Enabled": false
 		}
 	],
