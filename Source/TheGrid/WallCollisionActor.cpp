@@ -47,6 +47,9 @@ void AWallCollisionActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	_time += DeltaTime;
+	if (material != nullptr) {
+		material->SetScalarParameterValue(FName("Now"), UGameplayStatics::GetRealTimeSeconds(GetWorld()));
+	}
 	if (_time >= _maxTime) {
 		Destroy();
 	}
@@ -54,7 +57,8 @@ void AWallCollisionActor::Tick(float DeltaTime)
 
 void AWallCollisionActor::createAnimationsAtCollisionPoint(PlayerFaction faction, float size , FVector position, FVector normal, CollisionWall collisionWall)
 {
-	UMaterialInstanceDynamic* material = UMaterialInstanceDynamic::Create(faction == PLAYER_FACTION_BLUE ? _blueCollisionMaterial : _orangeCollisionMaterial, this);
+	material = UMaterialInstanceDynamic::Create(faction == PLAYER_FACTION_BLUE ? _blueCollisionMaterial : _orangeCollisionMaterial, this);
+	material->SetScalarParameterValue(FName("Now"), UGameplayStatics::GetRealTimeSeconds(GetWorld()));
 	material->SetScalarParameterValue(FName("StartTime"), UGameplayStatics::GetRealTimeSeconds(GetWorld()));
 	float distYTop = abs(WALL_RIGHT_MAX - position.Y);
 	float distYBot = abs(WALL_RIGHT_MIN - position.Y);

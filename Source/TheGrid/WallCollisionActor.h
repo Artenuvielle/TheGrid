@@ -23,6 +23,7 @@ protected:
 private:	
 	void createAnimationsAtCollisionPoint(PlayerFaction, float, FVector, FVector, CollisionWall);
 	float _time;
+	UMaterialInstanceDynamic* material = nullptr;
 	static UMaterial* _blueCollisionMaterial;
 	static UMaterial* _orangeCollisionMaterial;
 };
